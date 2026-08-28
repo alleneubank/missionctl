@@ -1,0 +1,32 @@
+{
+  "name": "missionctl",
+  "version": "0.1.0-rc.2",
+  "description": "Session-start campaign context from LOOP.md, backed by the separately installed missionctl executable.",
+  "author": {
+    "name": "Allen Eubank",
+    "email": "bigboss@metalrodeo.xyz",
+    "url": "https://github.com/alleneubank/missionctl"
+  },
+  "repository": "https://github.com/alleneubank/missionctl",
+  "license": "MIT",
+  "keywords": [
+    "loop",
+    "campaign",
+    "hooks",
+    "codex",
+    "claude"
+  ],
+  "interface": {
+    "displayName": "missionctl",
+    "shortDescription": "Inject bounded LOOP.md context at session start",
+    "longDescription": "Runs one fail-open SessionStart hook that reads the campaign LOOP.md at or above the working directory and injects its objective, current unit, red gates, decisions, blockers, and boundary.",
+    "developerName": "Allen Eubank",
+    "category": "Productivity",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Verify the missionctl session-start hook"
+    ]
+  }
+}

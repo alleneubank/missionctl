@@ -1,0 +1,134 @@
+{
+  "required": [
+    "fleet",
+    "hosts",
+    "settings",
+    "settings-themes",
+    "terminal-live",
+    "terminal-edit-menu",
+    "terminal-keys",
+    "hosts-add",
+    "hosts-pair",
+    "about",
+    "about-notice"
+  ],
+  "optional": [],
+  "present": [
+    "about",
+    "about-notice",
+    "fleet",
+    "hosts",
+    "hosts-add",
+    "hosts-pair",
+    "settings",
+    "settings-themes",
+    "terminal-edit-menu",
+    "terminal-keys",
+    "terminal-live"
+  ],
+  "frames": {
+    "fleet": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 48,
+      "dark_frac": 0.0,
+      "light_frac": 0.0046,
+      "failed": []
+    },
+    "hosts": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 64,
+      "dark_frac": 0.0002,
+      "light_frac": 0.0027,
+      "failed": []
+    },
+    "settings": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 125,
+      "dark_frac": 0.1368,
+      "light_frac": 0.0076,
+      "failed": []
+    },
+    "settings-themes": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 102,
+      "dark_frac": 0.1781,
+      "light_frac": 0.006,
+      "failed": []
+    },
+    "terminal-live": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 45,
+      "dark_frac": 0.8493,
+      "light_frac": 0.0023,
+      "failed": []
+    },
+    "terminal-edit-menu": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 53,
+      "dark_frac": 0.8044,
+      "light_frac": 0.0029,
+      "failed": []
+    },
+    "terminal-keys": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 64,
+      "dark_frac": 0.7147,
+      "light_frac": 0.0023,
+      "failed": []
+    },
+    "hosts-add": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 73,
+      "dark_frac": 0.0002,
+      "light_frac": 0.0046,
+      "failed": []
+    },
+    "hosts-pair": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 70,
+      "dark_frac": 0.5187,
+      "light_frac": 0.0047,
+      "failed": []
+    },
+    "about": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 70,
+      "dark_frac": 0.0002,
+      "light_frac": 0.0162,
+      "failed": []
+    },
+    "about-notice": {
+      "ok": true,
+      "width": 1080,
+      "height": 2340,
+      "unique_rgb4": 62,
+      "dark_frac": 0.0002,
+      "light_frac": 0.0308,
+      "failed": []
+    }
+  },
+  "failed": [],
+  "pass": true,
+  "oracle": "visual-pack-pixels",
+  "rubric": "mobile/oracles/screens.md"
+}

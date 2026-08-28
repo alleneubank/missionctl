@@ -1,0 +1,30 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "missionctl",
+  "description": "Bounded LOOP.md campaign context for Claude Code and Codex CLI sessions.",
+  "owner": {
+    "name": "Allen Eubank",
+    "email": "bigboss@metalrodeo.xyz"
+  },
+  "plugins": [
+    {
+      "name": "missionctl",
+      "description": "Injects the campaign LOOP.md projection at session start.",
+      "source": "./plugins/missionctl",
+      "version": "0.1.0-rc.2",
+      "category": "workflow",
+      "author": {
+        "name": "Allen Eubank",
+        "email": "bigboss@metalrodeo.xyz"
+      },
+      "homepage": "https://github.com/alleneubank/missionctl",
+      "keywords": [
+        "loop",
+        "campaign",
+        "hooks",
+        "codex",
+        "claude"
+      ]
+    }
+  ]
+}
