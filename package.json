@@ -1,0 +1,28 @@
+{
+  "name": "missionctl",
+  "version": "0.1.0-rc.1",
+  "description": "Typed mission and campaign contract evaluator for agent fleets.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "missionctl": "./dist/missionctl"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
