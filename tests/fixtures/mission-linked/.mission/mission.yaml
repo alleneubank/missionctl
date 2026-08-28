@@ -1,0 +1,21 @@
+mission: 1
+id: regional-rollout
+title: Regional rollout of the widget service
+outcome: Every region runs the widget service with cursor pagination and no offset callers.
+rubric:
+  - id: REGION-001
+    criterion: Canary region runs the new build.
+    floor: Canary health green for 24 hours.
+    status: met
+    evidence: ci://rollout/canary/2026-08-27
+  - id: REGION-002
+    criterion: All remaining regions run the new build.
+    floor: Every region health green for 24 hours.
+    status: open
+  - id: REGION-003
+    criterion: Offset callers are gone.
+    floor: Zero offset requests in a 7-day window.
+    status: open
+boundary:
+  - publish
+  - production-cutover

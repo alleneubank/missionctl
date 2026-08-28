@@ -1,0 +1,35 @@
+{
+  "target": {
+    "serial": "29161FDH3008MJ",
+    "emulator": false,
+    "model": "Pixel 7 Pro",
+    "device": "cheetah",
+    "sdk": "37",
+    "release": "17",
+    "gles": "ARM, Mali-G710, OpenGL ES 3.2 v1.r54p3-00eac0.1848e3b066182d5bb5a345ab256f13ee"
+  },
+  "tree": {
+    "head": "e72ae53caefefdf9ca09f4a9df4f1beaceff75f7",
+    "dirty": false
+  },
+  "frames": [
+    "about-notice.png",
+    "about.png",
+    "fleet.png",
+    "hosts-add.png",
+    "hosts-pair.png",
+    "hosts.png",
+    "settings-themes.png",
+    "settings.png",
+    "terminal-edit-menu.png",
+    "terminal-keys.png",
+    "terminal-live.png"
+  ],
+  "oracles": [
+    "visual-pack-check.py",
+    "android-preview-pixels.py",
+    "android-m3-oracle.sh"
+  ],
+  "result": "PASS",
+  "captured_at": "2026-08-26T11:27:13Z"
+}

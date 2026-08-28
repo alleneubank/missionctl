@@ -1,0 +1,29 @@
+mission: 1
+id: mission-control-arc
+title: Finish the mission-control arc and report its effect on Allen's AI usage
+outcome: Every supported harness resumes a campaign from one committed LOOP.md through the same bounded missionctl projection, the tool is installed fleet-wide through mise, and an evidence-backed Recall retrospective reports what the machinery changed about scope stability, context efficiency, human gates, and agent autonomy.
+rubric:
+  - id: CONTRACT-001
+    criterion: The LOOP-first missionctl contract validates, projects, and transitions from the repository alone, reviewed and merged.
+    floor: npm run check green, an independent review with no major-or-higher finding, and PR #1 merged to main.
+    status: open
+  - id: CONSUMERS-001
+    criterion: agent-profile doctrine and skills, agent-statusline, Codex /mission, and dotfiles consume the bounded missionctl projection without duplicating reducers or injecting unbounded loops.
+    floor: Each repository's own harness passes against the landed contract and its draft PR is refreshed with the ordered dependency chain.
+    status: open
+  - id: PUBLISH-001
+    criterion: A missionctl release installs reproducibly through the committed mise lock and marketplace plugin.
+    floor: Tagged release asset, checksum, and lock entry agree; dotfiles convergence passes.
+    status: open
+  - id: DOGFOOD-001
+    criterion: The landed system drives real attended and unattended campaigns across Codex, Claude, Pi, RL, and Sox work for one to two weeks.
+    floor: At least one full start → compact → close cycle per harness class on real work, with defects filed as loop blockers or fixed.
+    status: open
+  - id: RETRO-001
+    criterion: A Recall-backed retrospective compares sessions before and after rollout on scope stability, boundary fidelity, evidence-backed done claims, context growth, re-litigated decisions, rescues and early stops, gate latency, attended versus unattended behavior, and attention identification.
+    floor: Corpus dates and sampling stated, representative sessions cited, observation separated from inference, limitations recorded, keep/change/stop actions and doctrine amendments proposed; no universal productivity score.
+    status: open
+boundary:
+  - publish
+  - merge-tracked-ref
+  - release-tag

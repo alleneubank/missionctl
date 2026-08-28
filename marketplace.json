@@ -1,0 +1,20 @@
+{
+  "name": "missionctl",
+  "interface": {
+    "displayName": "Missionctl"
+  },
+  "plugins": [
+    {
+      "name": "missionctl",
+      "source": {
+        "source": "local",
+        "path": "./plugins/missionctl"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

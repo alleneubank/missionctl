@@ -1,0 +1,32 @@
+{
+  "target": {
+    "udid": "00008101-001E05A41144001E",
+    "simulator": false,
+    "platform": "iOS"
+  },
+  "tree": {
+    "head": "d97490ffd",
+    "dirty": true,
+    "provenance": "git reflog places d97490ffd at capture time; the next worktree commit fbacebeb5 landed at 2026-08-26T00:02:21Z"
+  },
+  "frames": [
+    "about-notice.png",
+    "about.png",
+    "fleet.png",
+    "hosts-add.png",
+    "hosts-pair.png",
+    "hosts.png",
+    "settings-themes.png",
+    "settings.png",
+    "terminal-edit-menu.png",
+    "terminal-keys.png",
+    "terminal-live.png"
+  ],
+  "oracles": [
+    "visual-pack-check.py",
+    "ios-hig-oracle.sh",
+    "fresh-context-visual-oracle:agent-2026-08-28-a54575"
+  ],
+  "result": "PASS",
+  "captured_at": "2026-08-26T00:00:43Z"
+}
