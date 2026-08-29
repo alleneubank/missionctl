@@ -11,11 +11,13 @@ rubric:
   - id: CONSUMERS-001
     criterion: agent-profile doctrine and skills, agent-statusline, Codex /mission, and dotfiles consume the bounded missionctl projection without duplicating reducers or injecting unbounded loops.
     floor: Each repository's own harness passes against the landed contract and its draft PR is refreshed with the ordered dependency chain.
-    status: open
+    status: met
+    evidence: "against v0.1.0-rc.2 on 2026-08-29: agent-profile #2 merged (717c5f2, npm run check 23/23), agent-statusline #2 merged (e8bb06e, zig build test + check-missionctl-smoke.sh), codex #1 merged into the fork main (8cb00361a0, 5 mission tests), dotfiles #12 merged (ee66a83, test-missionctl-mise.sh)"
   - id: PUBLISH-001
     criterion: A missionctl release installs reproducibly through the committed mise lock and marketplace plugin.
     floor: Tagged release asset, checksum, and lock entry agree; dotfiles convergence passes.
-    status: open
+    status: met
+    evidence: "v0.1.0-rc.2 pre-release asset sha256 71509f15… matches dotfiles mise.lock (ee66a83); dotfiles-sync converged ae-dev, pixelproton, fll-practice, onyx on 2026-08-29 with missionctl resolving to the mise shim and plugin 0.1.0-rc.2 installed"
   - id: DOGFOOD-001
     criterion: The landed system drives real attended and unattended campaigns across Codex, Claude, Pi, RL, and Sox work for one to two weeks.
     floor: At least one full start → compact → close cycle per harness class on real work, with defects filed as loop blockers or fixed.
