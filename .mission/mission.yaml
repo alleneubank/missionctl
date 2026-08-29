@@ -6,7 +6,8 @@ rubric:
   - id: CONTRACT-001
     criterion: The LOOP-first missionctl contract validates, projects, and transitions from the repository alone, reviewed and merged.
     floor: npm run check green, an independent review with no major-or-higher finding, and PR #1 merged to main.
-    status: open
+    status: met
+    evidence: "PR #1 rebase-merged as 2a3de93; CI run 33270300793 green (npm run check, package); review round 8 (rl review, claude) no major finding"
   - id: CONSUMERS-001
     criterion: agent-profile doctrine and skills, agent-statusline, Codex /mission, and dotfiles consume the bounded missionctl projection without duplicating reducers or injecting unbounded loops.
     floor: Each repository's own harness passes against the landed contract and its draft PR is refreshed with the ordered dependency chain.
