@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, symlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -368,18 +368,100 @@ describe("optional mission", () => {
     );
   });
 
-  it("keeps discovered campaigns and fails visibly when discovery hits its bound", () => {
+  it("discovers every campaign in a file-heavy source tree without spending the directory bound", () => {
+    const root = fixtureCopy("mission-linked");
+    const filler = resolve(root, "src");
+    mkdirSync(filler);
+    for (let index = 0; index < 1_100; index += 1) writeText(resolve(filler, `file-${index}.ts`), "");
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(0);
+    const output = json<{ ok: boolean; campaigns: Array<{ id: string }>; issues: Issue[] }>(result);
+    expect(output.ok).toBe(true);
+    expect(output.campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
+    expect(output.issues).toEqual([]);
+  });
+
+  it("prunes a repo-local Zig global cache before its descendants spend the directory bound", () => {
+    const root = fixtureCopy("mission-linked");
+    const cache = resolve(root, ".zig-global-cache");
+    mkdirSync(cache);
+    for (let index = 0; index < 1_100; index += 1) mkdirSync(resolve(cache, `dir-${index}`));
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(0);
+    const output = json<{ ok: boolean; campaigns: Array<{ id: string }>; issues: Issue[] }>(result);
+    expect(output.ok).toBe(true);
+    expect(output.campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
+    expect(output.issues).toEqual([]);
+  });
+
+  it("allows a directory-heavy repository below the explicit bound", () => {
+    const root = fixtureCopy("mission-linked");
+    const filler = resolve(root, "generated");
+    mkdirSync(filler);
+    for (let index = 0; index < 1_100; index += 1) mkdirSync(resolve(filler, `dir-${index}`));
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(0);
+    expect(json<{ campaigns: Array<{ id: string }> }>(result).campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
+  });
+
+  it("keeps discovered campaigns and fails visibly when discovery hits its directory bound", () => {
     const root = fixtureCopy("mission-linked");
     const filler = resolve(root, "zzz-filler");
     mkdirSync(filler);
-    for (let index = 0; index < 1_100; index += 1) writeText(resolve(filler, `file-${index}.txt`), "");
+    for (let index = 0; index < 10_001; index += 1) mkdirSync(resolve(filler, `dir-${index}`));
 
     const result = run(["mission", "--root", root, "--json"]);
     expect(result.status).toBe(1);
     const output = json<{ ok: boolean; campaigns: Array<{ id: string }>; issues: Issue[] }>(result);
     expect(output.ok).toBe(false);
     expect(output.campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
-    expect(output.issues).toEqual([expect.objectContaining({ code: "mission.discovery-bounded", severity: "error" })]);
+    expect(output.issues).toEqual([
+      expect.objectContaining({
+        code: "mission.discovery-bounded",
+        severity: "error",
+        message: expect.stringContaining("10000 directories"),
+      }),
+    ]);
+  });
+
+  it("ignores unrelated dangling symlinks while discovering and resolving real artifacts", () => {
+    const root = fixtureCopy("mission-linked");
+    symlinkSync(resolve(root, "missing-file"), resolve(root, "dangling-file"));
+    symlinkSync(resolve(root, "missing-directory"), resolve(root, "dangling-directory"));
+
+    expect(run(["check", "--root", ALPHA, "--json"]).status).toBe(0);
+    expect(json<{ classification: string }>(run(["inspect", "--root", ALPHA, "--json"])).classification).toBe("loop");
+    const mission = run(["mission", "--root", root, "--json"]);
+    expect(mission.status).toBe(0);
+    expect(json<{ campaigns: Array<{ id: string }> }>(mission).campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
+  });
+
+  it.each(["LOOP.md", ".claude/loop.md"])("fails visibly when %s is a dangling symlink", (relative) => {
+    const root = tempRoot("dangling-loop-contract");
+    const contract = resolve(root, relative);
+    mkdirSync(resolve(contract, ".."), { recursive: true });
+    symlinkSync(resolve(root, "missing-loop"), contract);
+
+    for (const command of ["check", "inspect"] as const) {
+      const result = run([command, "--root", root, "--json"]);
+      expect(result.status).toBe(1);
+      expect(json<{ error: { code: string } }>(result).error.code).toBe("loop.unreadable");
+    }
+  });
+
+  it("fails visibly when .mission/mission.yaml is a dangling symlink", () => {
+    const root = tempRoot("dangling-mission-contract");
+    mkdirSync(resolve(root, ".mission"));
+    symlinkSync(resolve(root, "missing-mission"), resolve(root, ".mission/mission.yaml"));
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(1);
+    expect(json<{ issues: Issue[] }>(result).issues).toEqual([
+      expect.objectContaining({ code: "mission.unreadable", severity: "error", path: "" }),
+    ]);
   });
 
   it("reports malformed missions and the absence of a mission", () => {

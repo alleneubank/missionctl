@@ -130,8 +130,14 @@ allowed, proposed, disposition, reason }] }`.
 
 ### Mission
 
-- REQ-MISSION-001 — `.mission/mission.yaml` validates per the domain model; `missionctl mission` projects `id`, `title`, `outcome`, `achieved`, each rubric item's state, and the linked campaigns discovered under the mission's directory (`id`, `status`, `targets`). A discovered loop that names the mission by `source` counts only when that source resolves to this mission file. Discovery is bounded at 1000 directory entries; when the bound trips, the campaigns found so far are still reported and `mission.discovery-bounded` is an error (`ok: false`). Malformed mission files are `mission.*` errors.
+- REQ-MISSION-001 — `.mission/mission.yaml` validates per the domain model; `missionctl mission` projects `id`, `title`, `outcome`, `achieved`, each rubric item's state, and the linked campaigns discovered under the mission's directory (`id`, `status`, `targets`). A discovered loop that names the mission by `source` counts only when that source resolves to this mission file. Discovery is bounded at 10000 entered directories after pruning, without counting file or symlink entries; when the bound trips, the campaigns found so far are still reported and `mission.discovery-bounded` is an error (`ok: false`). Malformed mission files are `mission.*` errors.
 - REQ-MISSION-002 — A loop's `targets.mission` IDs must exist in the linked mission; `close apply` sets each targeted rubric item per its disposition and writes `mission.yaml` atomically. A loop linked to a mission by `source` resolves it from a sibling checkout — `<ancestor>/<repository name>/<source.path>` for any ancestor of the loop's directory, the repository name being the last path segment of `source.repository` without `.git`; `source.ref` is informational and never fetched. Without a sibling the loop validates with a `mission.unavailable` warning and unvalidated mission targets; a sibling that is invalid or carries another id is a `mission.*` error. `close apply` writes the sibling's `mission.yaml` like a local one and lists it under `written`.
+- REQ-MISSION-003 — Campaign discovery prunes `.git`, `.hg`, `.svn`, `.rl`, `.zig-cache`, `.zig-global-cache`, `node_modules`, `target`, `zig-out`, and `dist` directories before descent and never follows symbolic links. Unrelated dangling file and directory symlinks do not affect `check`, `inspect`, or `mission`; a dangling symlink occupying an exact `LOOP.md`, `.claude/loop.md`, or `.mission/mission.yaml` contract path is reported as an unreadable contract instead of being treated as absent.
+
+Mission discovery traceability:
+
+- REQ-MISSION-001 — `tests/missionctl.test.ts`: “discovers every campaign in a file-heavy source tree without spending the directory bound”, “allows a directory-heavy repository below the explicit bound”, and “keeps discovered campaigns and fails visibly when discovery hits its directory bound”.
+- REQ-MISSION-003 — `tests/missionctl.test.ts`: “prunes a repo-local Zig global cache before its descendants spend the directory bound”, “ignores unrelated dangling symlinks while discovering and resolving real artifacts”, and the dangling loop and mission contract cases.
 
 ### Harness
 
@@ -173,6 +179,8 @@ allowed, proposed, disposition, reason }] }`.
 - [ ] Legacy `mission_control: 1`, untyped, and `.claude/loop.md` loops classify; `adopt` previews and writes one file only when valid.
 - [ ] `compact` keeps unresolved units, routes decisions into `SPEC.md`/`BRIEF.md` Decisions, refuses a stale or incomplete plan, and rewrites atomically.
 - [ ] `close` refuses non-terminal loops and unresolved plans, routes durable content, updates a linked mission, and deletes `LOOP.md`.
+- [ ] Mission campaign discovery succeeds in file-heavy repositories and below ignored cache trees, fails at its entered-directory bound, and does not follow unrelated symlinks.
+- [ ] A symlink occupying a loop or mission contract path fails visibly while an unrelated dangling symlink remains inert.
 - [ ] The Claude SessionStart hook emits bounded context, `{}` when absent, and a visible notice when invalid; only that hook is registered.
 - [ ] `npm run check`, the release archive, and `--version` agree on the package version.
 

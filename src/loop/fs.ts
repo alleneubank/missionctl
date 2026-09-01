@@ -1,16 +1,28 @@
 import { createHash, randomBytes } from "node:crypto";
-import { linkSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { linkSync, lstatSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-const IGNORED_DIRECTORIES = new Set([".git", ".hg", ".svn", ".rl", ".zig-cache", "node_modules", "target", "zig-out", "dist"]);
-/** Upper bound on files visited while discovering campaigns below a mission; a workspace larger than this is not a mission root. */
-export const DISCOVERY_FILES_MAX = 1_000;
+const IGNORED_DIRECTORIES = new Set([".git", ".hg", ".svn", ".rl", ".zig-cache", ".zig-global-cache", "node_modules", "target", "zig-out", "dist"]);
+/** Upper bound on directories entered while discovering campaigns below a mission. */
+export const DISCOVERY_DIRECTORIES_MAX = 10_000;
 
 export function isFile(path: string): boolean {
   try {
     return statSync(path).isFile();
   } catch {
     return false;
+  }
+}
+
+/** True for any directory entry, including a dangling symlink; only absence is false. */
+export function entryExists(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    const code = errorCode(error);
+    if (code === "ENOENT" || code === "ENOTDIR") return false;
+    throw error;
   }
 }
 
@@ -30,26 +42,47 @@ export function findUp(start: string, names: readonly string[]): string | undefi
   }
 }
 
+/** Like findUp, but an entry at an exact contract path is returned even when its symlink target is missing. */
+export function findUpEntry(start: string, names: readonly string[]): string | undefined {
+  let current = resolve(start);
+  if (isFile(current)) current = dirname(current);
+  // Bounded by path depth: every iteration moves strictly toward the root.
+  while (true) {
+    // A readable lower-precedence contract remains adoptable when the preferred target is a dangling symlink.
+    for (const name of names) {
+      const candidate = join(current, name);
+      if (isFile(candidate)) return candidate;
+    }
+    for (const name of names) {
+      const candidate = join(current, name);
+      if (entryExists(candidate)) return candidate;
+    }
+    const parent = dirname(current);
+    if (parent === current) return undefined;
+    current = parent;
+  }
+}
+
 export interface Discovery {
   paths: string[];
-  /** True when the entry bound stopped the walk; `paths` holds what was found before it. */
+  /** True when the directory bound stopped the walk; `paths` holds what was found before it. */
   truncated: boolean;
 }
 
-/** Finds every file named `name` below `root`, sorted, skipping tool and dependency directories; never discards what it found when the bound trips. */
+/** Finds every file named `name` below `root`, sorted, without following symlinks or counting files against the entered-directory bound. */
 export function findBelow(root: string, name: string): Discovery {
   const paths: string[] = [];
-  let visited = 0;
+  let directoriesVisited = 0;
   let truncated = false;
   const visit = (directory: string): void => {
+    directoriesVisited += 1;
+    if (directoriesVisited > DISCOVERY_DIRECTORIES_MAX) {
+      truncated = true;
+      return;
+    }
     const entries = readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
     for (const entry of entries) {
       if (truncated) return;
-      visited += 1;
-      if (visited > DISCOVERY_FILES_MAX) {
-        truncated = true;
-        return;
-      }
       const path = join(directory, entry.name);
       if (entry.isDirectory()) {
         if (!IGNORED_DIRECTORIES.has(entry.name)) visit(path);

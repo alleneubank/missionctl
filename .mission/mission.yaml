@@ -1,7 +1,7 @@
 mission: 1
 id: mission-control-arc
-title: Finish the mission-control arc and report its effect on Allen's AI usage
-outcome: Every supported harness resumes a campaign from one committed LOOP.md through the same bounded missionctl projection, the tool is installed fleet-wide through mise, and an evidence-backed Recall retrospective reports what the machinery changed about scope stability, context efficiency, human gates, and agent autonomy.
+title: Finish the mission-control arc through a bugbash and report its effect on Allen's AI usage
+outcome: "Every supported harness resumes a campaign from one committed LOOP.md through the same bounded missionctl projection, the tool is installed fleet-wide through mise, every GitHub issue open during the 2026-09-01 bugbash kickoff (#2 through #6) is resolved under its native acceptance criteria with regression evidence, and an evidence-backed Recall retrospective reports what the machinery changed about scope stability, context efficiency, human gates, and agent autonomy."
 rubric:
   - id: CONTRACT-001
     criterion: The LOOP-first missionctl contract validates, projects, and transitions from the repository alone, reviewed and merged.
@@ -21,6 +21,26 @@ rubric:
   - id: DOGFOOD-001
     criterion: The landed system drives real attended and unattended campaigns across Codex, Claude, Pi, RL, and Sox work for one to two weeks.
     floor: At least one full start → compact → close cycle per harness class on real work, with defects filed as loop blockers or fixed.
+    status: open
+  - id: ISSUE-002
+    criterion: "GitHub issue #2 is resolved: routing a decision never homogenizes a standing document with mixed line endings."
+    floor: A regression test observes the pre-fix whole-document rewrite and proves that routing changes only the Decisions section bytes, the targeted and full harnesses pass, a fresh reviewer reports no major-or-higher finding, and the issue is closed.
+    status: open
+  - id: ISSUE-003
+    criterion: "GitHub issue #3 is resolved: compact and close preparation makes a materially similar existing Decisions entry visible before the driver chooses a routing disposition."
+    floor: SPEC.md defines the similarity warning and its false-positive boundary, tests observe the missing warning and cover both a paraphrase and a permitted neighboring entry, the targeted and full harnesses pass, a fresh reviewer reports no major-or-higher finding, and the issue is closed.
+    status: open
+  - id: ISSUE-004
+    criterion: "GitHub issue #4 is resolved: discovery tolerates unrelated dangling symlinks without weakening fail-closed handling of contract artifacts."
+    floor: A hermetic fixture proves check, inspect, and mission discovery resolve the real artifacts around unrelated dangling file and directory symlinks while dangling LOOP.md or mission.yaml artifacts remain visible failures; the bounded deterministic walk, full harness, and fresh major-floor review pass; the issue is closed.
+    status: open
+  - id: ISSUE-005
+    criterion: "GitHub issue #5 is resolved: a repo-local .zig-global-cache cannot consume the bounded campaign-discovery walk."
+    floor: A regression fixture with more than 1000 ignored-cache descendants observes the pre-fix discovery-bound failure and then discovers the campaign successfully, a control fixture exceeding the unignored-directory bound still fails closed, the full harness and fresh major-floor review pass, and the issue is closed.
+    status: open
+  - id: ISSUE-006
+    criterion: "GitHub issue #6 is resolved: an ordinary file-heavy source tree cannot consume the bounded campaign-discovery walk."
+    floor: A regression fixture with more than 1000 ordinary files observes the pre-fix discovery-bound failure and then discovers the campaign successfully, the walk retains an explicit 10000-directory fail-closed bound, the full harness and fresh major-floor review pass, and the issue is closed.
     status: open
   - id: RETRO-001
     criterion: A Recall-backed retrospective compares sessions before and after rollout on scope stability, boundary fidelity, evidence-backed done claims, context growth, re-litigated decisions, rescues and early stops, gate latency, attended versus unattended behavior, and attention identification.
