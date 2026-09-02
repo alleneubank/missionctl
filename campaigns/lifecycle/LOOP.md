@@ -3,10 +3,10 @@ loop: 1
 id: lifecycle-bugbash
 objective: "Resolve GitHub issues #2 and #3 by making routed Decisions byte-preserving in mixed-ending standing documents and surfacing conservative paraphrase warnings before compact or close dispositions are chosen."
 status: active
-phase: E2E
-iteration: 3
+phase: BOUNDARY
+iteration: 4
 iteration_budget: 6
-updated_at: 2026-09-02T01:10:43Z
+updated_at: 2026-09-02T01:14:01Z
 mission:
   id: mission-control-arc
 targets:
@@ -30,7 +30,7 @@ gates:
   - id: review
     run: fresh-context review briefed with SPEC.md, BRIEF.md, issues 2 and 3, verifier output, and declared deferrals
     green: No major-or-higher finding against REQ-LIFE-004 and the standing brief.
-    state: red
+    state: green
 units:
   - id: U1
     title: "Codify issues #2 and #3 as byte-splice and conservative-similarity contracts with an observable test matrix."
@@ -63,6 +63,12 @@ units:
     targets:
       - ISSUE-002
       - ISSUE-003
+    state: done
+  - id: U6
+    title: "Human boundary: publish the reviewed branch, merge the tracked ref, and close GitHub issues #2 and #3 before campaign closure."
+    targets:
+      - ISSUE-002
+      - ISSUE-003
     state: current
 decisions:
   - date: 2026-09-02
@@ -82,6 +88,7 @@ boundary:
 
 ## State
 
+- Iteration 3 review evidence: a fresh-context, disinterested reviewer approved commit `4cfbbc1a9866bec82833bc85037424cf6ea772c8` with no major-or-higher findings. The reviewer independently passed typecheck, 27/27 lifecycle tests, the 138/138 full harness, lifecycle `check`/`context`, and worktree plus commit-range diff checks; it confirmed byte-splice preservation, exact-entry idempotence, conservative compact/close warnings, text rendering, and unchanged disposition semantics.
 - Iteration 3 full-harness evidence: `npm run check` passed typecheck, build, and 138/138 tests across eight files. The lifecycle suite contributes 27/27 passing cases; the existing discovery suite remains 48/48 green.
 - Iteration 2 implementation evidence: routing now locates the exact Decisions section on preserved source lines and splices entries with that section's terminator, without normalizing any existing byte. Proposed route items scan only the exact target section and carry advisory warnings at the four-token/eighty-percent floor; compact text renders the same warning. After correcting the close fixture to seed its actual SPEC target, the lifecycle gate passes 27/27 tests.
 - Iteration 1 TDD evidence: `npm run build && npm test -- tests/lifecycle.test.ts` ran 27 tests with exactly three expected failures. The mixed-ending apply rewrote every LF after the initial CRLF to CRLF; compact and close prepare returned no `warnings` for their paraphrased standing decisions. The other 24 lifecycle tests passed.
