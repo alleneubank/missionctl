@@ -194,6 +194,17 @@ export function projectMission(missionPath: string): MissionProjection {
       ),
     );
   }
+  for (const loopPath of discovery.unreadable) {
+    issues.push(
+      issue(
+        "mission.campaign-unreadable",
+        "error",
+        loopPath,
+        `${loopPath} is a symbolic link and campaign discovery does not follow symbolic links`,
+        `replace ${loopPath} with a readable LOOP.md file or remove the broken contract`,
+      ),
+    );
+  }
   for (const loopPath of discovery.paths) {
     const text = readFileSync(loopPath, "utf8");
     if (classifyLoop(text) !== "loop") continue;
@@ -207,7 +218,7 @@ export function projectMission(missionPath: string): MissionProjection {
     // A loop that names another repository's mission by source belongs to that mission, however it is called here.
     if (link.source) {
       const declared = findSiblingMissionPath(dirname(loopPath), link.source);
-      if (!declared || realpathSync(declared) !== realpathSync(missionPath)) continue;
+      if (!declared || !isFile(declared) || realpathSync(declared) !== realpathSync(missionPath)) continue;
     }
     campaigns.push({ path: loopPath, id: loop.document.id, status: loop.document.status, targets: [...(loop.document.targets.mission ?? [])] });
   }

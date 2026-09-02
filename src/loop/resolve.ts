@@ -169,12 +169,13 @@ export function evaluateLoop(root: string): LoopEvaluation {
   const path = findLoopPath(absolute);
   if (!path) return { kind: "none", root: absolute };
   if (!isFile(path)) throw new MissionctlError("loop.unreadable", `${path} exists but is not a readable loop file`);
+  let text: string;
   try {
-    return resolveLoop(readFileSync(path, "utf8"), path);
+    text = readFileSync(path, "utf8");
   } catch (error) {
-    if (error instanceof MissionctlError) throw error;
     throw new MissionctlError("loop.unreadable", `${path} cannot be read: ${error instanceof Error ? error.message : String(error)}`);
   }
+  return resolveLoop(text, path);
 }
 
 export function errorCount(issues: readonly Issue[]): number {

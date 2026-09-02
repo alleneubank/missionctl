@@ -4,9 +4,9 @@ id: discovery-bugbash
 objective: "Resolve GitHub issues #4, #5, and #6 by keeping campaign discovery bounded and deterministic in file-heavy repositories, around repo-local Zig caches, and around unrelated dangling symlinks without hiding broken contract artifacts."
 status: active
 phase: E2E
-iteration: 3
+iteration: 4
 iteration_budget: 6
-updated_at: 2026-09-01T23:51:47Z
+updated_at: 2026-09-02T00:07:31Z
 mission:
   id: mission-control-arc
 targets:
@@ -31,7 +31,7 @@ gates:
   - id: review
     run: rl review (fresh-context, briefed with SPEC.md, BRIEF.md, issues 4 through 6, verifier output, and declared deferrals)
     green: No major-or-higher finding against the discovery acceptance criteria and standing brief.
-    state: unknown
+    state: red
 units:
   - id: U1
     title: "Codify issues #4, #5, and #6 as discovery requirements and an observable test matrix in SPEC.md."
@@ -84,6 +84,7 @@ boundary:
 
 ## State
 
+- Iteration 3 review evidence: structured review job `review-1788306847250-pnyduc` rejected commit `f68f6a7` with one major and two minor findings. The fix-up guards dangling external mission sources before `realpathSync`, reports discovered `LOOP.md` symlinks as `mission.campaign-unreadable`, and limits unreadable wrapping to `readFileSync`. New regressions pass in the 46-test targeted suite; `npm run check` passes typecheck, build, and 133/133 tests across 8 files. One re-review round remains.
 - Iteration 2 implementation evidence: the targeted discovery gate passed 44/44 tests. The first `npm run check` found an adoption regression where a dangling primary target masked a readable legacy fallback; readable candidates now win before an unreadable exact entry is surfaced. The rerun passed typecheck, build, and 131/131 tests across 8 files.
 - Iteration 1 TDD evidence: `npm run build && npm test -- tests/missionctl.test.ts` ran 44 tests with 7 expected failures. File-heavy, ignored-cache, and below-bound directory trees tripped the old entry counter; the bound message still named 1000 entries; dangling loop contracts passed as absent; and a dangling mission contract returned no `mission.unreadable` issue. Unrelated dangling symlinks passed.
 - Live kickoff snapshot: `alleneubank/missionctl` has five open issues, numbered 2 through 6; no issue has dependency metadata, an assignee, or a milestone.

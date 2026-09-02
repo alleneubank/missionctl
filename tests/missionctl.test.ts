@@ -439,6 +439,22 @@ describe("optional mission", () => {
     expect(json<{ campaigns: Array<{ id: string }> }>(mission).campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
   });
 
+  it("fails visibly instead of following a symbolic link at a discovered LOOP.md path", () => {
+    const root = fixtureCopy("mission-linked");
+    const beta = resolve(root, "campaigns/beta");
+    mkdirSync(beta);
+    symlinkSync(resolve(beta, "missing-loop"), resolve(beta, "LOOP.md"));
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(1);
+    const output = json<{ ok: boolean; campaigns: Array<{ id: string }>; issues: Issue[] }>(result);
+    expect(output.ok).toBe(false);
+    expect(output.campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
+    expect(output.issues).toEqual([
+      expect.objectContaining({ code: "mission.campaign-unreadable", severity: "error", path: resolve(beta, "LOOP.md") }),
+    ]);
+  });
+
   it.each(["LOOP.md", ".claude/loop.md"])("fails visibly when %s is a dangling symlink", (relative) => {
     const root = tempRoot("dangling-loop-contract");
     const contract = resolve(root, relative);
@@ -562,6 +578,27 @@ describe("dogfood findings", () => {
     expect(json<CheckOutput>(run(["check", "--root", consumer, "--now", NOW, "--json"])).issues).toEqual([
       expect.objectContaining({ code: "target.unknown-mission-rubric", path: "targets.mission[0]", message: expect.stringContaining(resolve(rollout, ".mission/mission.yaml")) }),
     ]);
+  });
+
+  it("does not claim or stat through a dangling cross-repository mission source during projection", () => {
+    const parent = tempRoot("dangling-sibling-mission");
+    const root = resolve(parent, "rollout");
+    const sibling = resolve(parent, "elsewhere");
+    cpSync(MISSION_LINKED, root, { recursive: true });
+    mkdirSync(resolve(sibling, ".mission"), { recursive: true });
+    symlinkSync(resolve(sibling, "missing-mission"), resolve(sibling, ".mission/mission.yaml"));
+    replaceInFile(
+      resolve(root, "campaigns/alpha/LOOP.md"),
+      "mission: regional-rollout\n",
+      "mission:\n  id: regional-rollout\n  source:\n    repository: https://example.invalid/elsewhere.git\n    ref: main\n    path: .mission/mission.yaml\n",
+    );
+
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(0);
+    const output = json<{ ok: boolean; campaigns: unknown[]; issues: Issue[] }>(result);
+    expect(output.ok).toBe(true);
+    expect(output.campaigns).toEqual([]);
+    expect(output.issues).toEqual([]);
   });
 
   it("warns when an unquoted # turns the tail of a free-text value into a comment", () => {

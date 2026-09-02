@@ -65,6 +65,8 @@ export function findUpEntry(start: string, names: readonly string[]): string | u
 
 export interface Discovery {
   paths: string[];
+  /** Exact contract paths that are symbolic links; discovery never follows them. */
+  unreadable: string[];
   /** True when the directory bound stopped the walk; `paths` holds what was found before it. */
   truncated: boolean;
 }
@@ -72,6 +74,7 @@ export interface Discovery {
 /** Finds every file named `name` below `root`, sorted, without following symlinks or counting files against the entered-directory bound. */
 export function findBelow(root: string, name: string): Discovery {
   const paths: string[] = [];
+  const unreadable: string[] = [];
   let directoriesVisited = 0;
   let truncated = false;
   const visit = (directory: string): void => {
@@ -88,11 +91,13 @@ export function findBelow(root: string, name: string): Discovery {
         if (!IGNORED_DIRECTORIES.has(entry.name)) visit(path);
       } else if (entry.isFile() && entry.name === name) {
         paths.push(path);
+      } else if (entry.isSymbolicLink() && entry.name === name) {
+        unreadable.push(path);
       }
     }
   };
   visit(resolve(root));
-  return { paths, truncated };
+  return { paths, unreadable, truncated };
 }
 
 export function sha256(text: string): string {
