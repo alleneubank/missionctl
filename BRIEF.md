@@ -37,6 +37,7 @@ The objective oracle is `npm run check` over hand-written fixtures and golden ou
 - Never create a `.mission` directory, cache, sidecar, or archive as a side effect.
 - Never write to a standing document outside its `## Decisions` section.
 - Never store verifier output, review narrative, or rollout history in a loop or mission.
+- Never let a live `LOOP.md` or `.mission/mission.yaml` survive into a default-branch tree; test fixtures and inline documentation examples are exempt.
 - Never block a harness session start on missing or malformed state.
 
 ## Decisions

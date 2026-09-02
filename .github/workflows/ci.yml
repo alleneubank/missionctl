@@ -14,6 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Reject branch-local campaign artifacts
+        shell: bash
+        run: |
+          artifacts="$(find . \( -path './.git' -o -path './tests/fixtures' \) -prune -o \( -type f -o -type l \) \( -name LOOP.md -o -path '*/.mission/mission.yaml' \) -print | sort)"
+          if [[ -n "$artifacts" ]]; then
+            printf '::error::branch-local campaign artifacts must dissolve before merge\n%s\n' "$artifacts"
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 20

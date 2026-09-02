@@ -2,7 +2,7 @@
 
 ## Problem and solution
 
-An autonomous campaign needs one committed artifact that a fresh session, a
+An autonomous campaign needs one branch-committed artifact that a fresh session, a
 different harness, or a human can read to learn what is being pursued, what is
 red, what has been decided, and where the human boundary sits. Free-form loop
 journals grow without bound, carry stale state, and cannot be validated. A
@@ -17,6 +17,11 @@ meaning: which decisions are durable, which units are finished, which content
 migrates. Evidence stays where it is produced; the loop records which gates
 prove it and their last observed state. A `.mission/mission.yaml` is optional
 and exists only when an outcome genuinely spans campaigns or repositories.
+Both artifacts are work-branch control state. Before a tree merges to its
+default branch, every campaign loop closes and dissolves, completed mission
+content routes only to the standing docs that own current law, and the mission
+dissolves. Unfinished rubric items become tracker follow-ups only on explicit
+human direction; otherwise they are intentionally dropped at the boundary.
 
 ## Domain model
 
@@ -66,8 +71,8 @@ never runs gates.
 
 ### Mission (optional)
 
-`.mission/mission.yaml` declares one enduring outcome that outlives a single
-campaign:
+`.mission/mission.yaml` declares one coordinating outcome that outlives a
+single campaign but not the work branch that carries the mission:
 
 | Field | Required | Shape |
 |---|---|---|
@@ -80,6 +85,10 @@ A mission is achieved when every rubric item is `met` or `waived`. Campaigns
 link to it through `mission.id` and advance named rubric IDs through
 `targets.mission`. Nothing else is stored: git holds closed campaigns, and the
 native verifier, CI, review, and release systems hold evidence.
+At the final boundary, completed rubric facts dissolve with the mission after
+any current law is routed to standing docs. Open rubric items become follow-up
+issues only when the human explicitly requests them; a mission is never kept on
+the default branch as a backlog or historical ledger.
 
 ### Issues
 
@@ -151,6 +160,7 @@ Lifecycle bugbash traceability:
 ### Release
 
 - REQ-REL-001 — `missionctl --version` equals `package.json` `version`; release packaging emits one archive containing only the root `missionctl` executable plus a SHA-256 sidecar; the executable runs on Node.js 20+ and bundles its YAML parser.
+- REQ-REL-002 — Pull-request and default-branch CI refuse live `LOOP.md` or `.mission/mission.yaml` artifacts anywhere outside `tests/fixtures`; campaign branches may commit them for resumability, but the merge tree must dissolve them first.
 
 ## Invariants
 
@@ -160,6 +170,7 @@ Lifecycle bugbash traceability:
 - Invalid or legacy state is visible in every command; no command manufactures an empty pass.
 - Git is the archive: no in-repo archive, evidence ledger, campaign sidecar, or runtime cache.
 - A standing document is only ever appended to under its `## Decisions` heading.
+- Live `LOOP.md` and `.mission/mission.yaml` artifacts are branch-local and never survive in a default-branch tree; test fixtures are exempt.
 
 ## Non-goals
 
@@ -187,6 +198,7 @@ Lifecycle bugbash traceability:
 - [ ] A symlink occupying a loop or mission contract path fails visibly while an unrelated dangling symlink remains inert.
 - [ ] The Claude SessionStart hook emits bounded context, `{}` when absent, and a visible notice when invalid; only that hook is registered.
 - [ ] `npm run check`, the release archive, and `--version` agree on the package version.
+- [ ] Pull-request CI rejects live campaign or mission artifacts outside `tests/fixtures`, and the default-branch merge tree contains none.
 
 ## Decisions
 
@@ -205,3 +217,4 @@ Lifecycle bugbash traceability:
 - 2026-08-29 — The `REQ-MC-*` series of the superseded evidence-ledger design is retired unshipped; this document starts fresh series. **provisional (driver)**
 - 2026-08-29 — Adoption is additive; the legacy body is carried verbatim and unmapped legacy frontmatter is preserved under legacy_mission_control, retired later through compact dispositions. **provisional (driver)**
 - 2026-08-29 — The body is the driver's bytes in every rewrite, repair included: only the frontmatter is ever normalized (LF, no BOM), so a CRLF body stays CRLF beside LF frontmatter. **provisional (driver)**
+- 2026-09-02 — `LOOP.md` and `.mission/mission.yaml` are branch-local control artifacts and never land in a default-branch tree; completed mission content dissolves into current standing law, while unfinished rubric work becomes tracker follow-ups only on explicit human direction. **ratified (human)**

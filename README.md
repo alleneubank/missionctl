@@ -1,13 +1,19 @@
 # missionctl
 
 `missionctl` validates, projects, and transitions one compact `LOOP.md` — the
-committed contract for an autonomous campaign. A driver (agent or human) with
-nothing but the repository can read it, ask `missionctl context` what is being
-pursued, what is red, what is decided, and what is the human's, and shrink or
-dissolve the file without losing anything it did not explicitly let go.
+branch-committed contract for an autonomous campaign. A driver (agent or human)
+with nothing but the work branch can read it, ask `missionctl context` what is
+being pursued, what is red, what is decided, and where the human boundary sits,
+then dissolve the file without losing anything it did not explicitly let go.
 
 A normal feature campaign needs only `LOOP.md`. A `.mission/mission.yaml` is
 optional and exists only when an outcome spans campaigns or repositories.
+Both are branch-local control artifacts: close and delete every campaign loop,
+then dissolve the mission before the tree merges to a default branch. Completed
+content survives only when it is current standing law in `SPEC.md`, `BRIEF.md`,
+or `README.md`; unfinished mission work becomes tracker follow-ups only when the
+user explicitly directs that. Test fixtures and inline documentation examples
+are not live campaign artifacts.
 
 ## Install with mise
 
@@ -90,7 +96,9 @@ missionctl compact apply    --plan plan.json     # routes decisions into SPEC/BR
 `compact` lists done units, decisions, blockers, and body sections; unresolved
 work is never listed and always retained. `close` requires a terminal status,
 lists everything left, updates a linked mission rubric, and deletes `LOOP.md`.
-Git is the archive.
+At the final campaign boundary, dissolve the mission too; it is coordination
+state, not a default-branch backlog or evidence archive. Git and the native
+issue, CI, review, and release systems retain history.
 
 ## Agent plugin
 
