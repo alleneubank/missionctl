@@ -36,11 +36,11 @@ rubric:
     status: open
   - id: ISSUE-005
     criterion: "GitHub issue #5 is resolved: a repo-local .zig-global-cache cannot consume the bounded campaign-discovery walk."
-    floor: A regression fixture with more than 1000 ignored-cache descendants observes the pre-fix discovery-bound failure and then discovers the campaign successfully, a control fixture exceeding the unignored-directory bound still fails closed, the full harness and fresh major-floor review pass, and the issue is closed.
+    floor: A regression fixture with more than 10000 ignored-cache directories observes the pre-fix discovery-bound failure and then discovers the campaign successfully, a control fixture exceeding the unignored-directory bound still fails closed, the full harness and fresh major-floor review pass, and the issue is closed.
     status: open
   - id: ISSUE-006
     criterion: "GitHub issue #6 is resolved: an ordinary file-heavy source tree cannot consume the bounded campaign-discovery walk."
-    floor: A regression fixture with more than 1000 ordinary files observes the pre-fix discovery-bound failure and then discovers the campaign successfully, the walk retains an explicit 10000-directory fail-closed bound, the full harness and fresh major-floor review pass, and the issue is closed.
+    floor: A regression fixture with more than 10000 ordinary files observes the pre-fix discovery-bound failure and then discovers the campaign successfully, the walk retains an explicit 10000-directory fail-closed bound, the full harness and fresh major-floor review pass, and the issue is closed.
     status: open
   - id: RETRO-001
     criterion: A Recall-backed retrospective compares sessions before and after rollout on scope stability, boundary fidelity, evidence-backed done claims, context growth, re-litigated decisions, rescues and early stops, gate latency, attended versus unattended behavior, and attention identification.

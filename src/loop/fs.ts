@@ -60,7 +60,7 @@ export function findUpEntry(start: string, names: readonly string[]): string | u
 
 export interface Discovery {
   paths: string[];
-  /** Exact contract paths that are symbolic links; discovery never follows them. */
+  /** Exact contract paths whose symbolic-link target is not a readable file. */
   unreadable: string[];
   /** True when the directory bound stopped the walk; `paths` holds what was found before it. */
   truncated: boolean;

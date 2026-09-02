@@ -372,7 +372,7 @@ describe("optional mission", () => {
     const root = fixtureCopy("mission-linked");
     const filler = resolve(root, "src");
     mkdirSync(filler);
-    for (let index = 0; index < 1_100; index += 1) writeText(resolve(filler, `file-${index}.ts`), "");
+    for (let index = 0; index < 10_001; index += 1) writeText(resolve(filler, `file-${index}.ts`), "");
 
     const result = run(["mission", "--root", root, "--json"]);
     expect(result.status).toBe(0);
@@ -386,7 +386,7 @@ describe("optional mission", () => {
     const root = fixtureCopy("mission-linked");
     const cache = resolve(root, ".zig-global-cache");
     mkdirSync(cache);
-    for (let index = 0; index < 1_100; index += 1) mkdirSync(resolve(cache, `dir-${index}`));
+    for (let index = 0; index < 10_001; index += 1) mkdirSync(resolve(cache, `dir-${index}`));
 
     const result = run(["mission", "--root", root, "--json"]);
     expect(result.status).toBe(0);
@@ -452,7 +452,12 @@ describe("optional mission", () => {
     expect(output.ok).toBe(false);
     expect(output.campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
     expect(output.issues).toEqual([
-      expect.objectContaining({ code: "mission.campaign-unreadable", severity: "error", path: resolve(beta, "LOOP.md") }),
+      expect.objectContaining({
+        code: "mission.campaign-unreadable",
+        severity: "error",
+        path: resolve(beta, "LOOP.md"),
+        message: expect.stringContaining("target is not a readable loop file"),
+      }),
     ]);
   });
 

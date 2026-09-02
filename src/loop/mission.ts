@@ -200,7 +200,7 @@ export function projectMission(missionPath: string): MissionProjection {
         "mission.campaign-unreadable",
         "error",
         loopPath,
-        `${loopPath} is a symbolic link and campaign discovery does not follow symbolic links`,
+        `${loopPath} is a symbolic link whose target is not a readable loop file`,
         `replace ${loopPath} with a readable LOOP.md file or remove the broken contract`,
       ),
     );
