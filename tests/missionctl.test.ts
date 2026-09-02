@@ -429,11 +429,12 @@ describe("optional mission", () => {
 
   it("ignores unrelated dangling symlinks while discovering and resolving real artifacts", () => {
     const root = fixtureCopy("mission-linked");
+    const alpha = resolve(root, "campaigns/alpha");
     symlinkSync(resolve(root, "missing-file"), resolve(root, "dangling-file"));
-    symlinkSync(resolve(root, "missing-directory"), resolve(root, "dangling-directory"));
+    symlinkSync(resolve(alpha, "missing-directory"), resolve(alpha, "dangling-directory"));
 
-    expect(run(["check", "--root", ALPHA, "--json"]).status).toBe(0);
-    expect(json<{ classification: string }>(run(["inspect", "--root", ALPHA, "--json"])).classification).toBe("loop");
+    expect(run(["check", "--root", alpha, "--json"]).status).toBe(0);
+    expect(json<{ classification: string }>(run(["inspect", "--root", alpha, "--json"])).classification).toBe("loop");
     const mission = run(["mission", "--root", root, "--json"]);
     expect(mission.status).toBe(0);
     expect(json<{ campaigns: Array<{ id: string }> }>(mission).campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two"]);
