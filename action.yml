@@ -1,0 +1,17 @@
+name: Missionctl merge check
+description: Refuse branch-local LOOP.md and mission.yaml control artifacts before default-branch merge.
+author: Allen Eubank
+
+inputs:
+  exclude:
+    description: Newline-delimited repository-relative fixture directories to exclude in addition to CLI defaults.
+    required: false
+    default: ""
+
+runs:
+  using: node20
+  main: action/index.js
+
+branding:
+  icon: shield
+  color: blue

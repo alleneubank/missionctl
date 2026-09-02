@@ -14,6 +14,8 @@ Missionctl is shippable when a driver with nothing but the repository can read o
 - Lossless transitions
 - Degraded-state honesty
 - Portability
+- Merge-tree fidelity
+- Adapter parity
 - Reviewability
 
 ## Floors
@@ -24,6 +26,8 @@ Missionctl is shippable when a driver with nothing but the repository can read o
 - Lossless transitions: a `compact`/`close` plan with an unset, disallowed, or reason-less disposition is refused; a stale source is refused; an interrupted apply leaves the previous file intact; routed decisions appear in the target document's Decisions section with the rest of that document unchanged.
 - Degraded-state honesty: invalid, legacy, and absent state produce distinct, stable codes and exit statuses in `check`, `context`, `statusline`, and the hook; no command prints an empty success for an invalid loop.
 - Portability: the release archive holds one Node 20+ executable, the plugin manifests match the package version and register only the SessionStart hook, and `--version` matches `package.json`.
+- Merge-tree fidelity: one check over the tracked Git tree finds every live loop or mission contract, including symbolic links, without treating generated files, untracked work, or declared fixtures as shipped state; every refusal names the correct dissolution path.
+- Adapter parity: the reusable GitHub Action calls the exported CLI entry under GitHub's declared Node 20 runtime and preserves its findings, advice, and exit status; generated-bundle and behavioral-parity floors prove the action does not ship stale or divergent policy.
 - Reviewability: a fresh, disinterested reviewer briefed with this law and `SPEC.md` reports no major-or-higher finding.
 
 ## Oracle
@@ -38,6 +42,7 @@ The objective oracle is `npm run check` over hand-written fixtures and golden ou
 - Never write to a standing document outside its `## Decisions` section.
 - Never store verifier output, review narrative, or rollout history in a loop or mission.
 - Never let a live `LOOP.md` or `.mission/mission.yaml` survive into a default-branch tree; test fixtures and inline documentation examples are exempt.
+- Never duplicate merge-tree detection or remediation policy in the GitHub Action adapter.
 - Never block a harness session start on missing or malformed state.
 
 ## Decisions
@@ -45,6 +50,7 @@ The objective oracle is `npm run check` over hand-written fixtures and golden ou
 - 2026-08-28 — Consumer integrations shell out to canonical `missionctl` output rather than reimplementing validation or projection; structured consumers use `--json`, human pass-through surfaces may render stable text verbatim. **provisional (driver)**
 - 2026-08-29 — Legacy fixtures (`mission_control: 1`, untyped) are kept only as classification and adoption inputs, not as validating campaigns. **provisional (driver)**
 - 2026-08-28 — The Sox visual pilot's durable authority is the committed fixture at `tests/fixtures/sox-visual-pilot`; its device JSON is gate evidence referenced by a typed `LOOP.md`, not a ledger, and the retiring source worktree is not a release root. **ratified (human)**
+- 2026-09-02 — The reusable GitHub Action and local agents invoke the same bundled `missionctl merge check` command from the same release ref; the CLI remains the sole owner of detection and remediation advice. **ratified (human)**
 
 ## Boundary
 

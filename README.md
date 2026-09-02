@@ -23,7 +23,7 @@ Node.js 20 or newer is the only runtime dependency.
 ```toml
 [tools]
 "github:alleneubank/missionctl" = {
-  version = "v0.1.0-rc.2",
+  version = "v0.1.0-rc.3",
   exe = "missionctl",
   asset_pattern = "missionctl-*.tar.gz"
 }
@@ -76,6 +76,7 @@ missionctl adopt       [--write]           # draft a typed LOOP.md from a legacy
 missionctl compact prepare|validate|apply [--plan FILE]
 missionctl close   prepare|validate|apply [--plan FILE]
 missionctl mission     [--root DIR]        # project .mission/mission.yaml and its campaigns
+missionctl merge check [--root DIR] [--exclude PATH]  # refuse tracked branch-local artifacts before merge
 missionctl harness claude session-start    # hook adapter; reads hook JSON on stdin
 missionctl --version
 ```
@@ -100,6 +101,27 @@ At the final campaign boundary, dissolve the mission too; it is coordination
 state, not a default-branch backlog or evidence archive. Git and the native
 issue, CI, review, and release systems retain history.
 
+## GitHub Action
+
+The reusable action runs the bundled `missionctl merge check` command; it does
+not carry another detector or another set of repair instructions. Check out the
+repository first, then add the action anywhere in an existing job:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: alleneubank/missionctl@v0.1.0-rc.3
+  with:
+    exclude: |
+      path/to/other/fixtures
+```
+
+For an immutable dependency, replace the release tag with its full commit SHA.
+The command inspects tracked Git paths only, so generated and untracked files do
+not create false shipping failures. Findings carry the same artifact-specific
+repair advice locally and in Actions: close and remove campaign loops; after the
+final campaign, preserve only current standing law, create unfinished-item
+follow-ups only when the user directs it, and remove the mission.
+
 ## Agent plugin
 
 The repository is a Claude Code and Codex marketplace named `missionctl`. Its
@@ -113,6 +135,7 @@ vendored.
 
 ```bash
 npm ci
+npm run build:action          # regenerate the committed action bundle from the CLI entrypoint
 npm run check                 # typecheck, build, tests
 ./packaging/package-release.sh
 ```
