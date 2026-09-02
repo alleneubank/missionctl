@@ -14,13 +14,13 @@ interface JavaScriptAction {
 }
 
 describe("reusable GitHub Action", () => {
-  it("declares a Node 20 adapter over missionctl merge check", () => {
+  it("declares a Node 24 adapter over missionctl merge check", () => {
     const action = parse(readFileSync(resolve(ROOT, "action.yml"), "utf8")) as JavaScriptAction;
 
     expect(action).toMatchObject({
       name: "Missionctl merge check",
       inputs: { exclude: { required: false, default: "" } },
-      runs: { using: "node20", main: "action/index.js" },
+      runs: { using: "node24", main: "action/index.js" },
     });
   });
 
