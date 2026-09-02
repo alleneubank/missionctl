@@ -456,11 +456,37 @@ describe("optional mission", () => {
     ]);
   });
 
+  it("discovers an exact LOOP.md symlink when its target is a readable loop file", () => {
+    const root = fixtureCopy("mission-linked");
+    const beta = resolve(root, "campaigns/beta");
+    mkdirSync(beta);
+    writeText(resolve(beta, "linked-loop.md"), readText(resolve(ALPHA, "LOOP.md")).replace("id: rollout-wave-two", "id: rollout-wave-three"));
+    symlinkSync(resolve(beta, "linked-loop.md"), resolve(beta, "LOOP.md"));
+
+    expect(run(["check", "--root", beta, "--json"]).status).toBe(0);
+    const result = run(["mission", "--root", root, "--json"]);
+    expect(result.status).toBe(0);
+    expect(json<{ campaigns: Array<{ id: string }> }>(result).campaigns.map((campaign) => campaign.id)).toEqual(["rollout-wave-two", "rollout-wave-three"]);
+  });
+
   it.each(["LOOP.md", ".claude/loop.md"])("fails visibly when %s is a dangling symlink", (relative) => {
     const root = tempRoot("dangling-loop-contract");
     const contract = resolve(root, relative);
     mkdirSync(resolve(contract, ".."), { recursive: true });
     symlinkSync(resolve(root, "missing-loop"), contract);
+
+    for (const command of ["check", "inspect"] as const) {
+      const result = run([command, "--root", root, "--json"]);
+      expect(result.status).toBe(1);
+      expect(json<{ error: { code: string } }>(result).error.code).toBe("loop.unreadable");
+    }
+  });
+
+  it("does not let a readable legacy loop mask a dangling typed loop contract", () => {
+    const root = tempRoot("dangling-typed-with-legacy");
+    mkdirSync(resolve(root, ".claude"));
+    writeText(resolve(root, ".claude/loop.md"), readText(resolve(FIXTURES, "legacy-untyped/LOOP.md")));
+    symlinkSync(resolve(root, "missing-loop"), resolve(root, "LOOP.md"));
 
     for (const command of ["check", "inspect"] as const) {
       const result = run([command, "--root", root, "--json"]);

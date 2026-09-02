@@ -2,7 +2,7 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, symlinkSync, writeFileSy
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { adoptLoop, evaluateLoop } from "../src/loop/index.js";
+import { adoptLoop, evaluateAdoptableLoop, evaluateLoop } from "../src/loop/index.js";
 import { FIXTURES, NOW, fixtureCopy, json, readText, run, tempRoot } from "./helpers.js";
 
 interface Inspection {
@@ -366,7 +366,7 @@ describe("review round 7 findings", () => {
     writeFileSync(resolve(root, ".claude/loop.md"), readText(resolve(FIXTURES, "legacy-untyped/LOOP.md")));
     symlinkSync(resolve(root, "missing-target"), resolve(root, "LOOP.md"));
 
-    expect(() => adoptLoop(evaluateLoop(root), new Date(NOW), true)).toThrow(expect.objectContaining({ code: "legacy.target-exists" }));
+    expect(() => adoptLoop(evaluateAdoptableLoop(root), new Date(NOW), true)).toThrow(expect.objectContaining({ code: "legacy.target-exists" }));
     expect(lstatSync(resolve(root, "LOOP.md")).isSymbolicLink()).toBe(true);
     expect(existsSync(resolve(root, ".claude/loop.md"))).toBe(true);
     expect(readdirSync(root).sort()).toEqual([".claude", "LOOP.md"]);

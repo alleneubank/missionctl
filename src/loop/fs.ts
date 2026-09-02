@@ -48,11 +48,6 @@ export function findUpEntry(start: string, names: readonly string[]): string | u
   if (isFile(current)) current = dirname(current);
   // Bounded by path depth: every iteration moves strictly toward the root.
   while (true) {
-    // A readable lower-precedence contract remains adoptable when the preferred target is a dangling symlink.
-    for (const name of names) {
-      const candidate = join(current, name);
-      if (isFile(candidate)) return candidate;
-    }
     for (const name of names) {
       const candidate = join(current, name);
       if (entryExists(candidate)) return candidate;
@@ -71,7 +66,7 @@ export interface Discovery {
   truncated: boolean;
 }
 
-/** Finds every file named `name` below `root`, sorted, without following symlinks or counting files against the entered-directory bound. */
+/** Finds every file named `name` below `root`, sorted, without descending through symlinks or counting files against the entered-directory bound. */
 export function findBelow(root: string, name: string): Discovery {
   const paths: string[] = [];
   const unreadable: string[] = [];
@@ -92,7 +87,8 @@ export function findBelow(root: string, name: string): Discovery {
       } else if (entry.isFile() && entry.name === name) {
         paths.push(path);
       } else if (entry.isSymbolicLink() && entry.name === name) {
-        unreadable.push(path);
+        if (isFile(path)) paths.push(path);
+        else unreadable.push(path);
       }
     }
   };

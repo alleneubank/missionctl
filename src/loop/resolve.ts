@@ -166,7 +166,16 @@ export function resolveLoop(text: string, path: string): LoopEvaluation {
 
 export function evaluateLoop(root: string): LoopEvaluation {
   const absolute = resolve(root);
-  const path = findLoopPath(absolute);
+  return evaluateLoopPath(absolute, findLoopPath(absolute));
+}
+
+/** Adoption may read the lower-precedence legacy source even when its typed target already exists and must be refused on write. */
+export function evaluateAdoptableLoop(root: string): LoopEvaluation {
+  const absolute = resolve(root);
+  return evaluateLoopPath(absolute, findUp(absolute, LOOP_FILES));
+}
+
+function evaluateLoopPath(absolute: string, path: string | undefined): LoopEvaluation {
   if (!path) return { kind: "none", root: absolute };
   if (!isFile(path)) throw new MissionctlError("loop.unreadable", `${path} exists but is not a readable loop file`);
   let text: string;

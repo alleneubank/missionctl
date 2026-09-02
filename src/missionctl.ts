@@ -7,6 +7,7 @@ import {
   adoptLoop,
   applyPlan,
   errorCount,
+  evaluateAdoptableLoop,
   evaluateLoop,
   findMissionPath,
   inspectLoop,
@@ -235,7 +236,7 @@ function inspectCommand(options: Options): CommandResult {
 }
 
 function adoptCommand(options: Options): CommandResult {
-  const adoption = adoptLoop(evaluateLoop(options.root), options.now, options.write);
+  const adoption = adoptLoop(evaluateAdoptableLoop(options.root), options.now, options.write);
   const text =
     `${adoption.source} → ${adoption.target}${adoption.written ? " (written)" : " (preview)"}\n` +
     (adoption.issues.length > 0 ? `${issueLines(adoption.target, adoption.issues)}\n` : "") +
