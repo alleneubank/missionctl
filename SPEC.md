@@ -156,7 +156,7 @@ Merge-guard traceability:
 
 - REQ-MERGE-001 — `tests/merge-check.test.ts`: clean tracked tree; every root and nested artifact; untracked and default-fixture state; repeatable exclusions with neighboring-prefix protection; dangling symbolic links; control-character paths.
 - REQ-MERGE-002 — `tests/merge-check.test.ts`: exact loop and mission repair guidance; unsafe exclusions; roots outside Git; unavailable Git.
-- REQ-ACTION-001 — `tests/action.test.ts`: Node 20 metadata; committed action-entry bundle matches a fresh build; action and CLI status, output, and advice are identical. `.github/workflows/ci.yml` consumes the repository-root action.
+- REQ-ACTION-001 — `tests/action.test.ts`: Node 24 metadata; committed action-entry bundle matches a fresh build; action and CLI status, output, and advice are identical. `.github/workflows/ci.yml` consumes the repository-root action.
 
 ### Harness
 
@@ -167,7 +167,7 @@ Merge-guard traceability:
 
 - REQ-MERGE-001 — `missionctl merge check` resolves the Git repository containing `--root` and inspects its tracked tree, not ambient generated or untracked files. It reports every tracked path whose basename is `LOOP.md` or whose suffix is `.mission/mission.yaml`, including symbolic links, with stable `merge.branch-local-artifact` issues; exits `0` only when none remain and `1` when any remain; and emits the same result as stable JSON under `--json`. `tests/fixtures` is excluded by default. Each repeated `--exclude <repo-relative-path>` adds one exact path-or-descendant exclusion; empty, absolute, dot, parent-traversing, or control-character paths are refused rather than weakening the guard accidentally.
 - REQ-MERGE-002 — Each merge finding carries artifact-specific repair guidance. A `LOOP.md` finding tells the driver to finish the campaign, route durable decisions through `missionctl close`, and remove the loop before default-branch merge. A mission finding tells the driver to preserve only current standing law, create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, and remove the mission after the final campaign. A missing Git executable, a root outside a Git worktree, an unreadable index, or an output bound breach fails closed with a stable error and a repair path.
-- REQ-ACTION-001 — The repository-root `action.yml` is a reusable JavaScript GitHub Action that declares the Node 20 action runtime and invokes the exported CLI `main` as `missionctl merge check`; it owns no independent detection or advice. Its newline-delimited `exclude` input maps only to repeated CLI `--exclude` arguments. It requires a prior checkout, needs no token or write permission, preserves CLI output and exit status, and ships under the same versioned ref as the CLI release. The committed action entry bundle is byte-identical to a fresh build from the tagged source.
+- REQ-ACTION-001 — The repository-root `action.yml` is a reusable JavaScript GitHub Action that declares the Node 24 action runtime and invokes the exported CLI `main` as `missionctl merge check`; it owns no independent detection or advice. Its newline-delimited `exclude` input maps only to repeated CLI `--exclude` arguments. It requires a prior checkout, needs no token or write permission, preserves CLI output and exit status, and ships under the same versioned ref as the CLI release. The committed action entry bundle is byte-identical to a fresh build from the tagged source.
 
 ### Release
 

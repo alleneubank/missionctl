@@ -27,7 +27,7 @@ Missionctl is shippable when a driver with nothing but the repository can read o
 - Degraded-state honesty: invalid, legacy, and absent state produce distinct, stable codes and exit statuses in `check`, `context`, `statusline`, and the hook; no command prints an empty success for an invalid loop.
 - Portability: the release archive holds one Node 20+ executable, the plugin manifests match the package version and register only the SessionStart hook, and `--version` matches `package.json`.
 - Merge-tree fidelity: one check over the tracked Git tree finds every live loop or mission contract, including symbolic links, without treating generated files, untracked work, or declared fixtures as shipped state; every refusal names the correct dissolution path.
-- Adapter parity: the reusable GitHub Action calls the exported CLI entry under GitHub's declared Node 20 runtime and preserves its findings, advice, and exit status; generated-bundle and behavioral-parity floors prove the action does not ship stale or divergent policy.
+- Adapter parity: the reusable GitHub Action calls the exported CLI entry under GitHub's declared Node 24 runtime and preserves its findings, advice, and exit status; generated-bundle and behavioral-parity floors prove the action does not ship stale or divergent policy.
 - Reviewability: a fresh, disinterested reviewer briefed with this law and `SPEC.md` reports no major-or-higher finding.
 
 ## Oracle
