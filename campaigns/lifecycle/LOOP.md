@@ -3,10 +3,10 @@ loop: 1
 id: lifecycle-bugbash
 objective: "Resolve GitHub issues #2 and #3 by making routed Decisions byte-preserving in mixed-ending standing documents and surfacing conservative paraphrase warnings before compact or close dispositions are chosen."
 status: active
-phase: TDD
-iteration: 1
+phase: E2E
+iteration: 3
 iteration_budget: 6
-updated_at: 2026-09-02T01:05:13Z
+updated_at: 2026-09-02T01:10:43Z
 mission:
   id: mission-control-arc
 targets:
@@ -22,11 +22,11 @@ gates:
   - id: lifecycle
     run: npm run build && npm test -- tests/lifecycle.test.ts
     green: Mixed-ending routing preserves every byte outside the Decisions insertion, and compact plus close preparation emit only the specified similarity warnings.
-    state: red
+    state: green
   - id: check
     run: npm run check
     green: Typecheck, build, and every test pass.
-    state: red
+    state: green
   - id: review
     run: fresh-context review briefed with SPEC.md, BRIEF.md, issues 2 and 3, verifier output, and declared deferrals
     green: No major-or-higher finding against REQ-LIFE-004 and the standing brief.
@@ -45,25 +45,25 @@ units:
       - REQ-LIFE-004
       - ISSUE-002
       - ISSUE-003
-    state: current
+    state: done
   - id: U3
     title: Replace whole-document newline normalization with a section-local byte splice and preserve retry idempotence.
     targets:
       - REQ-LIFE-004
       - ISSUE-002
-    state: pending
+    state: done
   - id: U4
     title: Annotate proposed route items with deterministic materially-similar warnings while leaving neighboring decisions unwarned.
     targets:
       - REQ-LIFE-004
       - ISSUE-003
-    state: pending
+    state: done
   - id: U5
     title: Run the targeted and full harnesses, obtain a fresh-context review, and prepare the human boundary handoff.
     targets:
       - ISSUE-002
       - ISSUE-003
-    state: pending
+    state: current
 decisions:
   - date: 2026-09-02
     call: Similarity warnings use a conservative four-token and eighty-percent smaller-set containment floor so a shared domain noun cannot manufacture a warning.
@@ -82,6 +82,9 @@ boundary:
 
 ## State
 
+- Iteration 3 full-harness evidence: `npm run check` passed typecheck, build, and 138/138 tests across eight files. The lifecycle suite contributes 27/27 passing cases; the existing discovery suite remains 48/48 green.
+- Iteration 2 implementation evidence: routing now locates the exact Decisions section on preserved source lines and splices entries with that section's terminator, without normalizing any existing byte. Proposed route items scan only the exact target section and carry advisory warnings at the four-token/eighty-percent floor; compact text renders the same warning. After correcting the close fixture to seed its actual SPEC target, the lifecycle gate passes 27/27 tests.
+- Iteration 1 TDD evidence: `npm run build && npm test -- tests/lifecycle.test.ts` ran 27 tests with exactly three expected failures. The mixed-ending apply rewrote every LF after the initial CRLF to CRLF; compact and close prepare returned no `warnings` for their paraphrased standing decisions. The other 24 lifecycle tests passed.
 - SPEC/PLAN gate: REQ-LIFE-004 now fixes the byte-splice rule, additive warning surface, deterministic similarity threshold, and false-positive boundary. GitHub issue #3 supplies the requested `route.similar-entry` warning contract; the attended mission instruction authorizes its implementation while the loop retains publication and issue closure as boundaries.
 - Discovery campaign `discovery-bugbash` is independently approved at its human boundary on commit `cb9268edef3f270a5ea415ac0e8653ce4594fd7f`.
 - Live GitHub issue #2 reports that `appendDecisions` normalizes an entire mixed-ending standing document; issue #3 reports that `prepare` silently proposes routing when a paraphrased durable decision already exists.

@@ -259,7 +259,10 @@ function loadPlan(options: Options): Plan {
 }
 
 function planText(plan: Plan): string {
-  const rows = plan.items.map((entry) => `${entry.id}\t${entry.proposed}\tallowed=${entry.allowed.join("|")}\t${entry.summary}`);
+  const rows = plan.items.flatMap((entry) => [
+    `${entry.id}\t${entry.proposed}\tallowed=${entry.allowed.join("|")}\t${entry.summary}`,
+    ...(entry.warnings ?? []).map((warning) => `WARN ${warning.code}\t${warning.path}\t${warning.message}`),
+  ]);
   return `${plan.transition} ${plan.loop_path} source=${plan.source_sha256.slice(0, 12)}\n${rows.join("\n")}${rows.length > 0 ? "\n" : ""}`;
 }
 
