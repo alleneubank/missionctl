@@ -7,6 +7,8 @@ import {
   adoptLoop,
   applyPlan,
   errorCount,
+  checkMergeTree,
+  evaluateAdoptableLoop,
   evaluateLoop,
   findMissionPath,
   inspectLoop,
@@ -30,7 +32,7 @@ import {
 
 declare const __MISSIONCTL_VERSION__: string;
 
-const COMMANDS = ["check", "context", "statusline", "repair", "inspect", "adopt", "compact", "close", "mission", "harness"] as const;
+const COMMANDS = ["check", "context", "statusline", "repair", "inspect", "adopt", "compact", "close", "mission", "merge", "harness"] as const;
 type Command = (typeof COMMANDS)[number];
 const PLAN_STEPS = ["prepare", "validate", "apply"] as const;
 type PlanStep = (typeof PLAN_STEPS)[number];
@@ -45,6 +47,7 @@ interface Options {
   dryRun: boolean;
   write: boolean;
   event?: ClaudeHarnessEvent;
+  excludes: string[];
 }
 
 interface CommandResult {
@@ -66,6 +69,7 @@ function usage(): string {
     "  compact prepare|validate|apply [--plan <file|->]",
     "  close   prepare|validate|apply [--plan <file|->]",
     "  mission                      project .mission/mission.yaml and its campaigns",
+    "  merge check [--exclude <repo-relative-path>]  refuse branch-local control artifacts in the tracked tree",
     "  harness claude session-start hook adapter (reads hook JSON on stdin)",
     "  --version                    executable contract version",
   ].join("\n");
@@ -75,7 +79,7 @@ function parseOptions(argv: readonly string[]): Options {
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h")) throw new MissionctlError("usage", usage(), { exitCode: 2 });
   const command = argv[0];
   if (!COMMANDS.includes(command as Command)) throw new MissionctlError("usage", `unknown command ${command}\n${usage()}`, { exitCode: 2 });
-  const options: Options = { command: command as Command, root: process.cwd(), now: new Date(), json: false, dryRun: false, write: false };
+  const options: Options = { command: command as Command, root: process.cwd(), now: new Date(), json: false, dryRun: false, write: false, excludes: [] };
   let rootSeen = false;
   let index = 1;
   if (command === "harness") {
@@ -91,6 +95,9 @@ function parseOptions(argv: readonly string[]): Options {
     if (!PLAN_STEPS.includes(step as PlanStep)) throw new MissionctlError("usage", `${command} requires one of ${PLAN_STEPS.join(", ")}`, { exitCode: 2 });
     options.step = step as PlanStep;
     index = 2;
+  } else if (command === "merge") {
+    if (argv[1] !== "check") throw new MissionctlError("usage", "merge requires check", { exitCode: 2 });
+    index = 2;
   }
   for (; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -104,7 +111,7 @@ function parseOptions(argv: readonly string[]): Options {
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--write") options.write = true;
     else if (arg === "--root") {
-      if (rootSeen) throw new MissionctlError("usage", "--root may be given once; missionctl operates on one loop per invocation", { exitCode: 2 });
+      if (rootSeen) throw new MissionctlError("usage", "--root may be given once", { exitCode: 2 });
       rootSeen = true;
       options.root = resolve(next());
     } else if (arg === "--now") {
@@ -112,6 +119,10 @@ function parseOptions(argv: readonly string[]): Options {
       if (!Number.isFinite(Date.parse(value))) throw new MissionctlError("usage", "--now requires a valid timestamp", { exitCode: 2 });
       options.now = new Date(value);
     } else if (arg === "--plan") options.plan = next();
+    else if (arg === "--exclude") {
+      if (command !== "merge") throw new MissionctlError("usage", "--exclude applies to merge check", { exitCode: 2 });
+      options.excludes.push(next());
+    }
     else throw new MissionctlError("usage", `unexpected argument ${arg}\n${usage()}`, { exitCode: 2 });
   }
   // A flag a command cannot honor is refused up front; silently ignoring --dry-run before a write is the worst possible default.
@@ -128,7 +139,10 @@ function parseOptions(argv: readonly string[]): Options {
 
 function issueLines(artifact: string | null, issues: readonly Issue[]): string {
   return issues
-    .map((entry) => `${artifact ? `${artifact}: ` : ""}${entry.severity} ${entry.code}${entry.path ? ` ${entry.path}` : ""}: ${entry.message}\n  repair: ${entry.repair}`)
+    .map((entry) => {
+      const safe = (value: string): string => (/[\u0000-\u001f\u007f]/u.test(value) ? JSON.stringify(value) : value);
+      return `${artifact ? `${safe(artifact)}: ` : ""}${entry.severity} ${entry.code}${entry.path ? ` ${safe(entry.path)}` : ""}: ${safe(entry.message)}\n  repair: ${safe(entry.repair)}`;
+    })
     .join("\n");
 }
 
@@ -235,7 +249,7 @@ function inspectCommand(options: Options): CommandResult {
 }
 
 function adoptCommand(options: Options): CommandResult {
-  const adoption = adoptLoop(evaluateLoop(options.root), options.now, options.write);
+  const adoption = adoptLoop(evaluateAdoptableLoop(options.root), options.now, options.write);
   const text =
     `${adoption.source} → ${adoption.target}${adoption.written ? " (written)" : " (preview)"}\n` +
     (adoption.issues.length > 0 ? `${issueLines(adoption.target, adoption.issues)}\n` : "") +
@@ -258,7 +272,10 @@ function loadPlan(options: Options): Plan {
 }
 
 function planText(plan: Plan): string {
-  const rows = plan.items.map((entry) => `${entry.id}\t${entry.proposed}\tallowed=${entry.allowed.join("|")}\t${entry.summary}`);
+  const rows = plan.items.flatMap((entry) => [
+    `${entry.id}\t${entry.proposed}\tallowed=${entry.allowed.join("|")}\t${entry.summary}`,
+    ...(entry.warnings ?? []).map((warning) => `WARN ${warning.code}\t${warning.path}\t${warning.message}`),
+  ]);
   return `${plan.transition} ${plan.loop_path} source=${plan.source_sha256.slice(0, 12)}\n${rows.join("\n")}${rows.length > 0 ? "\n" : ""}`;
 }
 
@@ -311,6 +328,13 @@ function missionCommand(options: Options): CommandResult {
   return { exitCode: projection.ok ? 0 : 1, value: projection, text };
 }
 
+function mergeCheckCommand(options: Options): CommandResult {
+  const result = checkMergeTree(options.root, options.excludes);
+  const summary = result.ok ? "missionctl merge check: ok\n" : `missionctl merge check: blocked (${result.issues.length} artifact${result.issues.length === 1 ? "" : "s"})\n`;
+  const text = result.issues.length === 0 ? summary : `${issueLines(null, result.issues)}\n${summary}`;
+  return { exitCode: result.ok ? 0 : 1, value: result, text };
+}
+
 function execute(options: Options): CommandResult {
   switch (options.command) {
     case "check":
@@ -330,6 +354,8 @@ function execute(options: Options): CommandResult {
       return transitionCommand(options);
     case "mission":
       return missionCommand(options);
+    case "merge":
+      return mergeCheckCommand(options);
     case "harness": {
       const value = runClaudeHarness(options.event!, options.now);
       return { exitCode: 0, value, text: `${JSON.stringify(value)}\n` };
@@ -367,5 +393,3 @@ export function main(argv: readonly string[]): number {
     return failure.exitCode;
   }
 }
-
-process.exitCode = main(process.argv.slice(2));

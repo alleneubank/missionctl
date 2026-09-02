@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { findUp, isFile } from "./fs.js";
+import { findUp, findUpEntry, isFile } from "./fs.js";
 import { classifyLoop } from "./frontmatter.js";
 import { fencedLines } from "./lifecycle.js";
 import { MISSION_FILE, findMissionPath, findSiblingMissionPath, loadMission } from "./mission.js";
 import { issue, parseLoop, type ParsedLoop, type PartialLoopFields } from "./schema.js";
-import type { Issue, LoopClassification, LoopDocument, MissionDocument } from "./types.js";
+import { MissionctlError, type Issue, type LoopClassification, type LoopDocument, type MissionDocument } from "./types.js";
 
 /** Candidate loop locations per directory, in precedence order; `.claude/loop.md` is the legacy path. */
 export const LOOP_FILES = ["LOOP.md", ".claude/loop.md"] as const;
@@ -38,7 +38,7 @@ export type LoopEvaluation =
 export type ValidLoop = Extract<LoopEvaluation, { kind: "loop" }> & { document: LoopDocument; valid: true };
 
 export function findLoopPath(root: string): string | undefined {
-  return findUp(root, LOOP_FILES);
+  return findUpEntry(root, LOOP_FILES);
 }
 
 function tokenPresent(text: string, token: string): boolean {
@@ -166,9 +166,25 @@ export function resolveLoop(text: string, path: string): LoopEvaluation {
 
 export function evaluateLoop(root: string): LoopEvaluation {
   const absolute = resolve(root);
-  const path = findLoopPath(absolute);
-  if (!path || !isFile(path)) return { kind: "none", root: absolute };
-  return resolveLoop(readFileSync(path, "utf8"), path);
+  return evaluateLoopPath(absolute, findLoopPath(absolute));
+}
+
+/** Adoption may read the lower-precedence legacy source even when its typed target already exists and must be refused on write. */
+export function evaluateAdoptableLoop(root: string): LoopEvaluation {
+  const absolute = resolve(root);
+  return evaluateLoopPath(absolute, findUp(absolute, LOOP_FILES));
+}
+
+function evaluateLoopPath(absolute: string, path: string | undefined): LoopEvaluation {
+  if (!path) return { kind: "none", root: absolute };
+  if (!isFile(path)) throw new MissionctlError("loop.unreadable", `${path} exists but is not a readable loop file`);
+  let text: string;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch (error) {
+    throw new MissionctlError("loop.unreadable", `${path} cannot be read: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  return resolveLoop(text, path);
 }
 
 export function errorCount(issues: readonly Issue[]): number {

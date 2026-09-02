@@ -2,7 +2,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { parseDocument, type Document } from "yaml";
 
-import { DISCOVERY_FILES_MAX, findBelow, findUp, isFile } from "./fs.js";
+import { DISCOVERY_DIRECTORIES_MAX, entryExists, findBelow, findUpEntry, isFile } from "./fs.js";
 import { classifyLoop } from "./frontmatter.js";
 import { parseLoop } from "./schema.js";
 import { isNonEmptyString, isRecord, issue } from "./schema.js";
@@ -107,16 +107,22 @@ export function findSiblingMissionPath(loopDirectory: string, source: Pick<Missi
     const parent = dirname(current);
     if (parent === current) return undefined;
     const candidate = join(parent, name, source.path);
-    if (isFile(candidate)) return candidate;
+    if (entryExists(candidate)) return candidate;
     current = parent;
   }
 }
 
 export function findMissionPath(start: string): string | undefined {
-  return findUp(start, [MISSION_FILE]);
+  return findUpEntry(start, [MISSION_FILE]);
 }
 
 export function loadMission(path: string): ParsedMission {
+  if (!isFile(path)) {
+    return {
+      path,
+      issues: [issue("mission.unreadable", "error", "", `${path} exists but is not a readable mission file`, `replace ${path} with a readable mission.yaml file`)],
+    };
+  }
   return parseMission(readFileSync(path, "utf8"), path);
 }
 
@@ -179,7 +185,24 @@ export function projectMission(missionPath: string): MissionProjection {
   const discovery = findBelow(root, "LOOP.md");
   if (discovery.truncated) {
     issues.push(
-      issue("mission.discovery-bounded", "error", "", `campaign discovery stopped after ${DISCOVERY_FILES_MAX} entries under ${root}; the campaign list is incomplete`, "keep .mission/mission.yaml in a smaller root or move bulky directories under an ignored path"),
+      issue(
+        "mission.discovery-bounded",
+        "error",
+        "",
+        `campaign discovery stopped after ${DISCOVERY_DIRECTORIES_MAX} directories under ${root}; the campaign list is incomplete`,
+        "keep the mission root below the directory bound or move generated trees under an ignored path",
+      ),
+    );
+  }
+  for (const loopPath of discovery.unreadable) {
+    issues.push(
+      issue(
+        "mission.campaign-unreadable",
+        "error",
+        loopPath,
+        `${loopPath} is a symbolic link whose target is not a readable loop file`,
+        `replace ${loopPath} with a readable LOOP.md file or remove the broken contract`,
+      ),
     );
   }
   for (const loopPath of discovery.paths) {
@@ -195,7 +218,7 @@ export function projectMission(missionPath: string): MissionProjection {
     // A loop that names another repository's mission by source belongs to that mission, however it is called here.
     if (link.source) {
       const declared = findSiblingMissionPath(dirname(loopPath), link.source);
-      if (!declared || realpathSync(declared) !== realpathSync(missionPath)) continue;
+      if (!declared || !isFile(declared) || realpathSync(declared) !== realpathSync(missionPath)) continue;
     }
     campaigns.push({ path: loopPath, id: loop.document.id, status: loop.document.status, targets: [...(loop.document.targets.mission ?? [])] });
   }

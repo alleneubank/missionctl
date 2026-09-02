@@ -15,6 +15,7 @@ interface PlanItem {
   disposition: string | null;
   reason: string | null;
   evidence?: string | null;
+  warnings?: Array<{ code: string; severity: string; path: string; message: string; repair: string }>;
 }
 
 interface Plan {
@@ -109,6 +110,48 @@ describe("compact", () => {
         "- 2026-08-20 — Pagination uses cursors, not offsets. **ratified (human)**\r\n- 2026-08-28 — Cursors are opaque base64url strings. **ratified (human)**\r\n",
       ),
     );
+  });
+
+  it("splices into a mixed-ending Decisions section without changing surrounding bytes", () => {
+    const root = fixtureCopy("standalone");
+    const spec = resolve(root, "SPEC.md");
+    const mixed = readText(spec).replace("# Widget service\n", "# Widget service\r\n");
+    writeFileSync(spec, mixed);
+    const plan = decide(prepare(root, "compact"), { "unit:U1": "keep", "decision:0": "route:spec", "decision:1": "keep", "section:State": "keep", "section:Notes": "keep" });
+
+    expect(run(["compact", "apply", "--root", root, "--plan", planPath(root, plan), "--now", NOW, "--json"]).status).toBe(0);
+    expect(readText(spec)).toBe(
+      mixed.replace(
+        "- 2026-08-20 — Pagination uses cursors, not offsets. **ratified (human)**\n",
+        "- 2026-08-20 — Pagination uses cursors, not offsets. **ratified (human)**\n- 2026-08-28 — Cursors are opaque base64url strings. **ratified (human)**\n",
+      ),
+    );
+  });
+
+  it("warns on a proposed route that paraphrases a standing decision but not on a neighboring decision", () => {
+    const existing = "Head is not a loop field; concurrency safety comes from plan source sha256 and git owns commit identity.";
+    const similar = "Head is not a loop field; plan source sha256 supplies concurrency safety.";
+    const matchingRoot = fixtureCopy("standalone");
+    replaceInFile(resolve(matchingRoot, "SPEC.md"), "Pagination uses cursors, not offsets.", existing);
+    replaceInFile(resolve(matchingRoot, "LOOP.md"), "Cursors are opaque base64url strings.", similar);
+
+    const matching = prepare(matchingRoot, "compact");
+    expect(matching.items.find((item) => item.id === "decision:0")?.warnings).toEqual([
+      {
+        code: "route.similar-entry",
+        severity: "warning",
+        path: "items.decision:0",
+        message: expect.stringContaining("SPEC.md"),
+        repair: expect.stringContaining("drop"),
+      },
+    ]);
+    expect(run(["compact", "prepare", "--root", matchingRoot, "--now", NOW]).stdout).toContain("WARN route.similar-entry\titems.decision:0");
+
+    const neighboringRoot = fixtureCopy("standalone");
+    replaceInFile(resolve(neighboringRoot, "SPEC.md"), "Pagination uses cursors, not offsets.", existing);
+    replaceInFile(resolve(neighboringRoot, "LOOP.md"), "Cursors are opaque base64url strings.", "Head commit identity appears in operator output.");
+
+    expect(prepare(neighboringRoot, "compact").items.find((item) => item.id === "decision:0")?.warnings).toBeUndefined();
   });
 
   it("refuses a plan with unset, disallowed, or reason-less dispositions", () => {
@@ -275,6 +318,17 @@ boundary:
 });
 
 describe("close", () => {
+  it("warns when a proposed close route paraphrases a standing decision", () => {
+    const root = fixtureCopy("mission-linked");
+    const alpha = resolve(root, "campaigns", "alpha");
+    replaceInFile(resolve(root, "SPEC.md"), "Regions roll in alphabetical order.", "Pause between regions is 30 minutes.");
+    replaceInFile(resolve(alpha, "LOOP.md"), "Pause between regions is 30 minutes.", "Regions pause for 30 minutes between rollout steps.");
+
+    expect(prepare(alpha, "close").items.find((item) => item.id === "decision:0")?.warnings).toEqual([
+      expect.objectContaining({ code: "route.similar-entry", severity: "warning", path: "items.decision:0", message: expect.stringContaining("SPEC.md") }),
+    ]);
+  });
+
   it("refuses a non-terminal loop", () => {
     const root = fixtureCopy("standalone");
 

@@ -29,6 +29,8 @@ export interface PlanItem {
   reason: string | null;
   /** Present only on rubric items; required when the disposition is `met`. */
   evidence?: string | null;
+  /** Advisory findings emitted by prepare; dispositions remain explicit and unchanged. */
+  warnings?: Issue[];
 }
 
 export interface Plan {
@@ -162,7 +164,102 @@ export function planItems(loop: ValidLoop, transition: Transition): PlanItem[] {
       items.push(item(`rubric:${target}`, "rubric", `${target} [${entry.status}] ${entry.criterion}`, ["met", "open", "waived"], document.status === "done" ? "met" : "open", true));
     }
   }
-  return items;
+  return withRouteWarnings(loop, items);
+}
+
+const SIMILARITY_STOP_WORDS = new Set([
+  "and",
+  "are",
+  "but",
+  "for",
+  "from",
+  "has",
+  "have",
+  "into",
+  "its",
+  "that",
+  "the",
+  "their",
+  "then",
+  "this",
+  "was",
+  "were",
+  "will",
+  "with",
+]);
+
+function meaningfulTokens(text: string): Set<string> {
+  const unwrapped = text
+    .replace(/^\s*[-*+]\s+/, "")
+    .replace(/^\d{4}-\d{2}-\d{2}\s+—\s+/, "")
+    .replace(/\s+\*\*[^*]+\*\*\s*$/, "");
+  const tokens = unwrapped.normalize("NFKC").toLocaleLowerCase("en-US").match(/[\p{L}\p{N}]+/gu) ?? [];
+  return new Set(tokens.filter((token) => token.length >= 3 && !SIMILARITY_STOP_WORDS.has(token)));
+}
+
+/** Similarity is deliberately containment-based: a short paraphrase may omit context, while fewer than four shared content tokens never warns. */
+function materiallySimilar(left: string, right: string): boolean {
+  const leftTokens = meaningfulTokens(left);
+  const rightTokens = meaningfulTokens(right);
+  const smaller = Math.min(leftTokens.size, rightTokens.size);
+  if (smaller < 4) return false;
+  let shared = 0;
+  for (const token of leftTokens) if (rightTokens.has(token)) shared += 1;
+  return shared >= 4 && shared / smaller >= 0.8;
+}
+
+interface PreservedLine {
+  raw: string;
+  content: string;
+  terminator: "\r\n" | "\n" | "";
+}
+
+function preservedLines(source: string): PreservedLine[] {
+  if (source.length === 0) return [];
+  return source.split(/(?<=\n)/).map((raw) => {
+    const terminator = raw.endsWith("\r\n") ? "\r\n" : raw.endsWith("\n") ? "\n" : "";
+    return { raw, content: terminator.length > 0 ? raw.slice(0, -terminator.length) : raw, terminator };
+  });
+}
+
+function decisionsEntries(source: string): string[] {
+  const lines = preservedLines(source);
+  const fenced = fencedLines(lines.map((line) => line.content));
+  const heading = lines.findIndex((line, index) => !fenced[index] && /^##\s+Decisions\s*$/.test(line.content));
+  if (heading === -1) return [];
+  let end = lines.findIndex((line, index) => index > heading && !fenced[index] && /^#{1,2}\s/.test(line.content));
+  if (end === -1) end = lines.length;
+  return lines.slice(heading + 1, end).map((line) => line.content.trim()).filter((line) => /^[-*+]\s+/.test(line));
+}
+
+function withRouteWarnings(loop: ValidLoop, items: PlanItem[]): PlanItem[] {
+  const directory = dirname(loop.path);
+  return items.map((entry) => {
+    if (entry.kind !== "decision") return entry;
+    const target = routeTarget(entry.proposed);
+    if (!target) return entry;
+    const targetPath = findUp(directory, [target]);
+    if (!targetPath) return entry;
+    const index = Number(entry.id.slice("decision:".length));
+    const call = loop.document.decisions[index]?.call;
+    if (!call) return entry;
+    let candidates: string[];
+    try {
+      candidates = decisionsEntries(readFileSync(targetPath, "utf8"));
+    } catch {
+      // Similarity is advisory; preserve prepare's existing behavior when a standing document cannot be inspected.
+      return entry;
+    }
+    if (!candidates.some((candidate) => materiallySimilar(call, candidate))) return entry;
+    const warning = issue(
+      "route.similar-entry",
+      "warning",
+      `items.${entry.id}`,
+      `${targetPath} already contains a materially similar Decisions entry for ${entry.id}`,
+      "choose drop with a reason when the existing entry already carries the durable intent; otherwise keep or route deliberately",
+    );
+    return { ...entry, warnings: [warning] };
+  });
 }
 
 /** Every close phase re-checks the live status: a plan that matches the file bytes proves nothing about whether the campaign ended. */
@@ -310,34 +407,29 @@ function decisionEntry(date: string, call: string, status: "provisional" | "rati
  */
 export function appendDecisions(source: string, entries: readonly string[]): string {
   if (entries.length === 0) return source;
-  const crlf = source.includes("\r\n");
-  const appended = appendDecisionsLf(source.replaceAll("\r\n", "\n"), entries);
-  if (appended === undefined) return source;
-  return crlf ? appended.replaceAll("\n", "\r\n") : appended;
-}
-
-function appendDecisionsLf(text: string, entries: readonly string[]): string | undefined {
-  const lines = text.split("\n");
-  const fenced = fencedLines(lines);
+  const lines = preservedLines(source);
+  const fenced = fencedLines(lines.map((line) => line.content));
   // Only the exact heading is the standing document's Decisions section; `## Decisions Archive` is someone else's.
-  const heading = lines.findIndex((line, index) => !fenced[index] && /^##\s+Decisions\s*$/.test(line));
+  const heading = lines.findIndex((line, index) => !fenced[index] && /^##\s+Decisions\s*$/.test(line.content));
   if (heading === -1) {
-    const base = text.length === 0 ? "" : text.endsWith("\n") ? text : `${text}\n`;
-    return `${base}\n## Decisions\n\n${entries.join("\n")}\n`;
+    const terminator = [...lines].reverse().find((line) => line.terminator.length > 0)?.terminator || "\n";
+    const separator = source.length === 0 ? "" : lines.at(-1)?.terminator ? terminator : `${terminator}${terminator}`;
+    return `${source}${separator}## Decisions${terminator}${terminator}${entries.join(terminator)}${terminator}`;
   }
-  let end = lines.findIndex((line, index) => index > heading && !fenced[index] && /^#{1,2}\s/.test(line));
+  let end = lines.findIndex((line, index) => index > heading && !fenced[index] && /^#{1,2}\s/.test(line.content));
   if (end === -1) end = lines.length;
-  const present = new Set(lines.slice(heading + 1, end).map((line) => line.trim()));
+  const present = new Set(lines.slice(heading + 1, end).map((line) => line.content.trim()));
   const fresh = entries.filter((entry) => !present.has(entry.trim()));
-  if (fresh.length === 0) return undefined;
+  if (fresh.length === 0) return source;
   let last = end - 1;
-  while (last > heading && lines[last].trim().length === 0) last -= 1;
-  // An empty section gets a blank line between the heading and its first entry.
-  const insertAt = last === heading ? heading + 1 : last + 1;
-  const spacer = last === heading ? [""] : [];
-  const rebuilt = [...lines.slice(0, insertAt), ...spacer, ...fresh, ...lines.slice(insertAt)];
-  const joined = rebuilt.join("\n");
-  return joined.endsWith("\n") ? joined : `${joined}\n`;
+  while (last > heading && lines[last].content.trim().length === 0) last -= 1;
+  const terminator = lines.slice(heading, end).find((line) => line.terminator.length > 0)?.terminator || "\n";
+  const insertAfter = last === heading ? heading : last;
+  const offset = lines.slice(0, insertAfter + 1).reduce((total, line) => total + line.raw.length, 0);
+  const needsTerminator = lines[insertAfter].terminator.length === 0 ? terminator : "";
+  const blank = last === heading ? terminator : "";
+  const insertion = `${needsTerminator}${blank}${fresh.join(terminator)}${terminator}`;
+  return `${source.slice(0, offset)}${insertion}${source.slice(offset)}`;
 }
 
 export interface ApplyResult {

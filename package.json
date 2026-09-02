@@ -1,6 +1,6 @@
 {
   "name": "missionctl",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Typed mission and campaign contract evaluator for agent fleets.",
   "license": "MIT",
   "type": "module",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:action": "node scripts/build.mjs --action",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm run build && npm test"

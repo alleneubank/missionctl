@@ -2,7 +2,7 @@
 
 ## Problem and solution
 
-An autonomous campaign needs one committed artifact that a fresh session, a
+An autonomous campaign needs one branch-committed artifact that a fresh session, a
 different harness, or a human can read to learn what is being pursued, what is
 red, what has been decided, and where the human boundary sits. Free-form loop
 journals grow without bound, carry stale state, and cannot be validated. A
@@ -17,6 +17,11 @@ meaning: which decisions are durable, which units are finished, which content
 migrates. Evidence stays where it is produced; the loop records which gates
 prove it and their last observed state. A `.mission/mission.yaml` is optional
 and exists only when an outcome genuinely spans campaigns or repositories.
+Both artifacts are work-branch control state. Before a tree merges to its
+default branch, every campaign loop closes and dissolves, completed mission
+content routes only to the standing docs that own current law, and the mission
+dissolves. Unfinished rubric items become tracker follow-ups only on explicit
+human direction; otherwise they are intentionally dropped at the boundary.
 
 ## Domain model
 
@@ -66,8 +71,8 @@ never runs gates.
 
 ### Mission (optional)
 
-`.mission/mission.yaml` declares one enduring outcome that outlives a single
-campaign:
+`.mission/mission.yaml` declares one coordinating outcome that outlives a
+single campaign but not the work branch that carries the mission:
 
 | Field | Required | Shape |
 |---|---|---|
@@ -80,6 +85,10 @@ A mission is achieved when every rubric item is `met` or `waived`. Campaigns
 link to it through `mission.id` and advance named rubric IDs through
 `targets.mission`. Nothing else is stored: git holds closed campaigns, and the
 native verifier, CI, review, and release systems hold evidence.
+At the final boundary, completed rubric facts dissolve with the mission after
+any current law is routed to standing docs. Open rubric items become follow-up
+issues only when the human explicitly requests them; a mission is never kept on
+the default branch as a backlog or historical ledger.
 
 ### Issues
 
@@ -121,7 +130,7 @@ allowed, proposed, disposition, reason }] }`.
 - REQ-LIFE-001 — `compact prepare` and `close prepare` emit a plan whose `source_sha256` is the SHA-256 of the current `LOOP.md` bytes. `validate` and `apply` refuse (`plan.stale-source`) when the file changed since prepare, refuse (`plan.unknown-item` / `plan.missing-item`) when the item set differs from a fresh prepare, refuse (`plan.invalid`) a plan naming any item id more than once, and refuse (`plan.missing-disposition`, `plan.disposition-not-allowed`, `plan.missing-reason`) when any item lacks an explicit allowed disposition or a required reason. `apply` writes through a same-directory temporary file and `rename`, so a reader never observes a partial file. `apply --dry-run` validates the plan and reports every path it would write, route, drop, or delete without touching any file. A flag a command cannot honor (`--dry-run` outside `repair` and `apply`, `--write` outside `adopt`, `--plan` outside `validate`/`apply`) is a usage error (exit 2).
 - REQ-LIFE-002 — `compact` lists: `done` units (`drop` | `keep`), decisions (`keep` | `route:spec` | `route:brief` | `drop`), blockers (`keep` | `drop`), and each `## ` section of the body outside fenced code (`keep` | `drop` | `migrated`; a fence closes only on the marker that opened it). Section ids are `section:<heading>`, suffixed `#2`, `#3`, … until unique within the body, so no two items share an id even when a heading spells a suffix. `drop` requires a reason for decisions and blockers. Units that are not `done`, gates, targets, and boundary are never listed and always retained. The proposed disposition is `drop` for done units and body sections, `route:spec` for ratified decisions, and `keep` otherwise.
 - REQ-LIFE-003 — `close` requires `status` in `done`, `budget-exhausted`, `superseded`; `prepare`, `validate`, and `apply` each re-check the live status (else `close.not-terminal`), so a plan whose `source_sha256` matches a non-terminal loop is still refused. It lists every unit not `done` (`complete` | `drop`), every decision (`route:spec` | `route:brief` | `drop`), every blocker (`drop`), the body preamble as `preamble` when it carries any non-blank line other than a `# ` title (`drop` | `migrated`), every body section (`drop` | `migrated`), the preserved `legacy_mission_control` block (`drop` with reason | `migrated`), and, when a mission is linked and available, every `targets.mission` rubric item (`met` | `open` | `waived`; `met` requires `evidence`, `waived` requires `reason`). `apply` routes, updates the mission rubric, then deletes `LOOP.md`.
-- REQ-LIFE-004 — Routing appends `- <date> — <call>. **<status> (<human|driver>)**` at the end of the `## Decisions` section of the nearest `SPEC.md` or `BRIEF.md` (creating the section at the end of the file when absent), preserving the document's line endings. A missing target document is a `route.target-missing` validation error, so no loop content is deleted before its destination is known. Target documents are written before the loop. The exact `## Decisions` heading (not a prefix such as `## Decisions Archive`) is located outside fenced code, and entries already present verbatim in the section are not appended again, so a retried `apply` after a failed loop rewrite is idempotent.
+- REQ-LIFE-004 — Routing appends `- <date> — <call>. **<status> (<human|driver>)**` at the end of the `## Decisions` section of the nearest `SPEC.md` or `BRIEF.md` (creating the section at the end of the file when absent). The append is a byte splice: every pre-existing byte outside the insertion is unchanged, including mixed line endings, and inserted bytes use the exact Decisions section's line terminator (or the final existing line terminator, then LF, when the section is absent). A missing target document is a `route.target-missing` validation error, so no loop content is deleted before its destination is known. Target documents are written before the loop. The exact `## Decisions` heading (not a prefix such as `## Decisions Archive`) is located outside fenced code, and entries already present verbatim in the section are not appended again, so a retried `apply` after a failed loop rewrite is idempotent. During `prepare`, a decision whose proposed disposition is `route:spec` or `route:brief` carries an optional `warnings` list on its plan item when the proposed target's Decisions section already contains a materially similar entry; text output renders the same warning. Similarity is deterministic and conservative: strip decision date/status markup, lowercase Unicode letter/digit tokens, discard common grammar words and tokens shorter than three characters, and emit `route.similar-entry` only when at least four meaningful tokens overlap and those tokens cover at least 80% of the smaller set. Entries below either threshold, including neighboring decisions that merely share a domain noun, are not warned. The warning is advisory: the driver still chooses an explicit disposition, normally `drop` with a reason when the durable intent is already present.
 
 ### Legacy
 
@@ -130,17 +139,40 @@ allowed, proposed, disposition, reason }] }`.
 
 ### Mission
 
-- REQ-MISSION-001 — `.mission/mission.yaml` validates per the domain model; `missionctl mission` projects `id`, `title`, `outcome`, `achieved`, each rubric item's state, and the linked campaigns discovered under the mission's directory (`id`, `status`, `targets`). A discovered loop that names the mission by `source` counts only when that source resolves to this mission file. Discovery is bounded at 1000 directory entries; when the bound trips, the campaigns found so far are still reported and `mission.discovery-bounded` is an error (`ok: false`). Malformed mission files are `mission.*` errors.
+- REQ-MISSION-001 — `.mission/mission.yaml` validates per the domain model; `missionctl mission` projects `id`, `title`, `outcome`, `achieved`, each rubric item's state, and the linked campaigns discovered under the mission's directory (`id`, `status`, `targets`). A discovered loop that names the mission by `source` counts only when that source resolves to this mission file. Discovery is bounded at 10000 entered directories after pruning, without counting file or symlink entries; when the bound trips, the campaigns found so far are still reported and `mission.discovery-bounded` is an error (`ok: false`). Malformed mission files are `mission.*` errors.
 - REQ-MISSION-002 — A loop's `targets.mission` IDs must exist in the linked mission; `close apply` sets each targeted rubric item per its disposition and writes `mission.yaml` atomically. A loop linked to a mission by `source` resolves it from a sibling checkout — `<ancestor>/<repository name>/<source.path>` for any ancestor of the loop's directory, the repository name being the last path segment of `source.repository` without `.git`; `source.ref` is informational and never fetched. Without a sibling the loop validates with a `mission.unavailable` warning and unvalidated mission targets; a sibling that is invalid or carries another id is a `mission.*` error. `close apply` writes the sibling's `mission.yaml` like a local one and lists it under `written`.
+- REQ-MISSION-003 — Campaign discovery prunes `.git`, `.hg`, `.svn`, `.rl`, `.zig-cache`, `.zig-global-cache`, `node_modules`, `target`, `zig-out`, and `dist` directories before descent and never descends through symbolic links. Unrelated dangling file and directory symlinks do not affect `check`, `inspect`, or `mission`. An exact contract-file symlink that resolves to a readable file is handled as that file; a dangling symlink occupying an exact `LOOP.md`, `.claude/loop.md`, or `.mission/mission.yaml` contract path is reported as an unreadable contract instead of being treated as absent. Normal commands preserve `LOOP.md` precedence even when it is unreadable; `adopt` alone may read a lower-precedence `.claude/loop.md` source so its exclusive write reports the existing typed target.
+
+Mission discovery traceability:
+
+- REQ-MISSION-001 — `tests/missionctl.test.ts`: “discovers every campaign in a file-heavy source tree without spending the directory bound”, “allows a directory-heavy repository below the explicit bound”, and “keeps discovered campaigns and fails visibly when discovery hits its directory bound”.
+- REQ-MISSION-003 — `tests/missionctl.test.ts`: “prunes a repo-local Zig global cache before its descendants spend the directory bound”, “ignores unrelated dangling symlinks while discovering and resolving real artifacts”, and the dangling loop and mission contract cases.
+
+Lifecycle bugbash traceability:
+
+- REQ-LIFE-004 — `tests/lifecycle.test.ts`: mixed-ending routing changes only the Decisions insertion bytes; compact and close preparation warn on a paraphrased existing decision; a neighboring decision below the explicit token threshold remains unwarned.
+
+Merge-guard traceability:
+
+- REQ-MERGE-001 — `tests/merge-check.test.ts`: clean tracked tree; every root and nested artifact; untracked and default-fixture state; repeatable exclusions with neighboring-prefix protection; dangling symbolic links; control-character paths.
+- REQ-MERGE-002 — `tests/merge-check.test.ts`: exact loop and mission repair guidance; unsafe exclusions; roots outside Git; unavailable Git.
+- REQ-ACTION-001 — `tests/action.test.ts`: Node 20 metadata; committed action-entry bundle matches a fresh build; action and CLI status, output, and advice are identical. `.github/workflows/ci.yml` consumes the repository-root action.
 
 ### Harness
 
 - REQ-HOOK-001 — `missionctl harness claude session-start` reads bounded hook JSON (≤ 65536 bytes, `cwd` required) from stdin and emits `{ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext } }` carrying the text form of `context`. No loop, unreadable input, or an internal failure emits `{}` with exit `0`; an invalid loop emits `additionalContext` naming the issue count (errors and warnings) and `missionctl check`. The hook writes no files.
 - REQ-HOOK-002 — The Claude and Codex plugin manifests share the package version and register exactly one hook: `SessionStart` → `missionctl harness claude session-start`.
 
+### Default-branch merge guard
+
+- REQ-MERGE-001 — `missionctl merge check` resolves the Git repository containing `--root` and inspects its tracked tree, not ambient generated or untracked files. It reports every tracked path whose basename is `LOOP.md` or whose suffix is `.mission/mission.yaml`, including symbolic links, with stable `merge.branch-local-artifact` issues; exits `0` only when none remain and `1` when any remain; and emits the same result as stable JSON under `--json`. `tests/fixtures` is excluded by default. Each repeated `--exclude <repo-relative-path>` adds one exact path-or-descendant exclusion; empty, absolute, dot, parent-traversing, or control-character paths are refused rather than weakening the guard accidentally.
+- REQ-MERGE-002 — Each merge finding carries artifact-specific repair guidance. A `LOOP.md` finding tells the driver to finish the campaign, route durable decisions through `missionctl close`, and remove the loop before default-branch merge. A mission finding tells the driver to preserve only current standing law, create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, and remove the mission after the final campaign. A missing Git executable, a root outside a Git worktree, an unreadable index, or an output bound breach fails closed with a stable error and a repair path.
+- REQ-ACTION-001 — The repository-root `action.yml` is a reusable JavaScript GitHub Action that declares the Node 20 action runtime and invokes the exported CLI `main` as `missionctl merge check`; it owns no independent detection or advice. Its newline-delimited `exclude` input maps only to repeated CLI `--exclude` arguments. It requires a prior checkout, needs no token or write permission, preserves CLI output and exit status, and ships under the same versioned ref as the CLI release. The committed action entry bundle is byte-identical to a fresh build from the tagged source.
+
 ### Release
 
 - REQ-REL-001 — `missionctl --version` equals `package.json` `version`; release packaging emits one archive containing only the root `missionctl` executable plus a SHA-256 sidecar; the executable runs on Node.js 20+ and bundles its YAML parser.
+- REQ-REL-002 — Pull-request and default-branch CI refuse live `LOOP.md` or `.mission/mission.yaml` artifacts anywhere outside `tests/fixtures`; campaign branches may commit them for resumability, but the merge tree must dissolve them first.
 
 ## Invariants
 
@@ -148,8 +180,11 @@ allowed, proposed, disposition, reason }] }`.
 - Missionctl never deletes loop content without an explicit disposition from the driver, and never decides which content is durable.
 - The body of `LOOP.md` is preserved exactly except through a `compact`/`close` disposition.
 - Invalid or legacy state is visible in every command; no command manufactures an empty pass.
+- The merge guard judges the tracked Git tree; generated and untracked workspace files cannot create a false shipping failure.
+- The GitHub Action delegates detection and advice to the bundled CLI; it never carries a second policy implementation.
 - Git is the archive: no in-repo archive, evidence ledger, campaign sidecar, or runtime cache.
 - A standing document is only ever appended to under its `## Decisions` heading.
+- Live `LOOP.md` and `.mission/mission.yaml` artifacts are branch-local and never survive in a default-branch tree; test fixtures are exempt.
 
 ## Non-goals
 
@@ -173,8 +208,13 @@ allowed, proposed, disposition, reason }] }`.
 - [ ] Legacy `mission_control: 1`, untyped, and `.claude/loop.md` loops classify; `adopt` previews and writes one file only when valid.
 - [ ] `compact` keeps unresolved units, routes decisions into `SPEC.md`/`BRIEF.md` Decisions, refuses a stale or incomplete plan, and rewrites atomically.
 - [ ] `close` refuses non-terminal loops and unresolved plans, routes durable content, updates a linked mission, and deletes `LOOP.md`.
+- [ ] `merge check` reports every tracked live loop or mission with artifact-specific dissolution advice, ignores untracked state and declared fixture prefixes, and fails closed when Git inspection is unavailable.
+- [ ] The reusable GitHub Action runs the same bundled `merge check` command, and missionctl's own pull-request CI consumes that action.
+- [ ] Mission campaign discovery succeeds in file-heavy repositories and below ignored cache trees, fails at its entered-directory bound, and does not follow unrelated symlinks.
+- [ ] A symlink occupying a loop or mission contract path fails visibly while an unrelated dangling symlink remains inert.
 - [ ] The Claude SessionStart hook emits bounded context, `{}` when absent, and a visible notice when invalid; only that hook is registered.
 - [ ] `npm run check`, the release archive, and `--version` agree on the package version.
+- [ ] Pull-request CI rejects live campaign or mission artifacts outside `tests/fixtures`, and the default-branch merge tree contains none.
 
 ## Decisions
 
@@ -193,3 +233,5 @@ allowed, proposed, disposition, reason }] }`.
 - 2026-08-29 — The `REQ-MC-*` series of the superseded evidence-ledger design is retired unshipped; this document starts fresh series. **provisional (driver)**
 - 2026-08-29 — Adoption is additive; the legacy body is carried verbatim and unmapped legacy frontmatter is preserved under legacy_mission_control, retired later through compact dispositions. **provisional (driver)**
 - 2026-08-29 — The body is the driver's bytes in every rewrite, repair included: only the frontmatter is ever normalized (LF, no BOM), so a CRLF body stays CRLF beside LF frontmatter. **provisional (driver)**
+- 2026-09-02 — `LOOP.md` and `.mission/mission.yaml` are branch-local control artifacts and never land in a default-branch tree; completed mission content dissolves into current standing law, while unfinished rubric work becomes tracker follow-ups only on explicit human direction. **ratified (human)**
+- 2026-09-02 — The reusable GitHub Action ships with the CLI release and delegates its detection, exit status, and remediation text to `missionctl merge check`; consumers receive the same advice as a local agent. **ratified (human)**
