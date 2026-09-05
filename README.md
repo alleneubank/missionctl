@@ -12,9 +12,9 @@ Both are branch-local control artifacts: close and delete every campaign loop,
 then dissolve the mission before the tree merges into a shared branch — any
 branch others build on, not only the default one. Completed content survives
 only when it is current standing law in `SPEC.md`, `BRIEF.md`, or `README.md`;
-a loop close files each unfinished unit as a tracker issue, while unfinished
-mission work becomes tracker follow-ups only when the user explicitly directs
-that. Pushing the campaign branch itself for a handoff is fine; merging it with
+a loop close files each unfinished unit as a tracker issue, and unfinished
+mission rubric items are filed the same way unless the user explicitly waives
+it. Pushing the campaign branch itself for a handoff is fine; merging it with
 the artifacts still in the tree is not. Test fixtures and inline documentation
 examples are not live campaign artifacts.
 
@@ -122,8 +122,9 @@ For an immutable dependency, replace the release tag with its full commit SHA.
 The command inspects tracked Git paths only, so generated and untracked files do
 not create false shipping failures. Findings carry the same artifact-specific
 repair advice locally and in Actions: close and remove campaign loops; after the
-final campaign, preserve only current standing law, create unfinished-item
-follow-ups only when the user directs it, and remove the mission.
+final campaign, preserve only current standing law, file each unfinished rubric
+item as a tracker issue unless the user explicitly waives it, and remove the
+mission.
 
 ## Agent plugin
 

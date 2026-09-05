@@ -94,7 +94,7 @@ describe("shared-branch merge guard", () => {
           message:
             "services/api/.mission/mission.yaml is branch-local mission state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)",
           repair:
-            "after the final campaign, preserve only current standing law; create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, then remove services/api/.mission/mission.yaml before merging into a shared branch",
+            "after the final campaign, preserve only current standing law, file each unfinished rubric item as a tracker issue unless the user explicitly waives it, then remove services/api/.mission/mission.yaml before merging into a shared branch",
         },
       ],
     });

@@ -7925,7 +7925,7 @@ function artifactIssue(path, kind) {
     severity: "error",
     path,
     message: `${shown} is branch-local mission state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)`,
-    repair: `after the final campaign, preserve only current standing law; create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, then remove ${shown} before merging into a shared branch`
+    repair: `after the final campaign, preserve only current standing law, file each unfinished rubric item as a tracker issue unless the user explicitly waives it, then remove ${shown} before merging into a shared branch`
   };
 }
 function checkMergeTree(root2, additionalExcludes = []) {
