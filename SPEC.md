@@ -17,8 +17,9 @@ meaning: which decisions are durable, which units are finished, which content
 migrates. Evidence stays where it is produced; the loop records which gates
 prove it and their last observed state. A `.mission/mission.yaml` is optional
 and exists only when an outcome genuinely spans campaigns or repositories.
-Both artifacts are work-branch control state. Before a tree merges to its
-default branch, every campaign loop closes and dissolves, completed mission
+Both artifacts are work-branch control state. Before a tree merges into a
+shared branch — any branch others build on, not only the default one — every
+campaign loop closes and dissolves, completed mission
 content routes only to the standing docs that own current law, and the mission
 dissolves. Unfinished rubric items become tracker follow-ups only on explicit
 human direction; otherwise they are intentionally dropped at the boundary.
@@ -88,7 +89,7 @@ native verifier, CI, review, and release systems hold evidence.
 At the final boundary, completed rubric facts dissolve with the mission after
 any current law is routed to standing docs. Open rubric items become follow-up
 issues only when the human explicitly requests them; a mission is never kept on
-the default branch as a backlog or historical ledger.
+a shared branch as a backlog or historical ledger.
 
 ### Issues
 
@@ -163,16 +164,16 @@ Merge-guard traceability:
 - REQ-HOOK-001 — `missionctl harness claude session-start` reads bounded hook JSON (≤ 65536 bytes, `cwd` required) from stdin and emits `{ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext } }` carrying the text form of `context`. No loop, unreadable input, or an internal failure emits `{}` with exit `0`; an invalid loop emits `additionalContext` naming the issue count (errors and warnings) and `missionctl check`. The hook writes no files.
 - REQ-HOOK-002 — The Claude and Codex plugin manifests share the package version and register exactly one hook: `SessionStart` → `missionctl harness claude session-start`.
 
-### Default-branch merge guard
+### Shared-branch merge guard
 
 - REQ-MERGE-001 — `missionctl merge check` resolves the Git repository containing `--root` and inspects its tracked tree, not ambient generated or untracked files. It reports every tracked path whose basename is `LOOP.md` or whose suffix is `.mission/mission.yaml`, including symbolic links, with stable `merge.branch-local-artifact` issues; exits `0` only when none remain and `1` when any remain; and emits the same result as stable JSON under `--json`. `tests/fixtures` is excluded by default. Each repeated `--exclude <repo-relative-path>` adds one exact path-or-descendant exclusion; empty, absolute, dot, parent-traversing, or control-character paths are refused rather than weakening the guard accidentally.
-- REQ-MERGE-002 — Each merge finding carries artifact-specific repair guidance. A `LOOP.md` finding tells the driver to finish the campaign, route durable decisions through `missionctl close`, and remove the loop before default-branch merge. A mission finding tells the driver to preserve only current standing law, create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, and remove the mission after the final campaign. A missing Git executable, a root outside a Git worktree, an unreadable index, or an output bound breach fails closed with a stable error and a repair path.
+- REQ-MERGE-002 — Each merge finding carries artifact-specific repair guidance. A `LOOP.md` finding tells the driver to finish the campaign, route durable decisions through `missionctl close`, file each unfinished unit as a tracker issue, and remove the loop before merging into a shared branch — any branch others build on, not only the default one. A mission finding tells the driver to preserve only current standing law, create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, and remove the mission after the final campaign. A missing Git executable, a root outside a Git worktree, an unreadable index, or an output bound breach fails closed with a stable error and a repair path.
 - REQ-ACTION-001 — The repository-root `action.yml` is a reusable JavaScript GitHub Action that declares the Node 24 action runtime and invokes the exported CLI `main` as `missionctl merge check`; it owns no independent detection or advice. Its newline-delimited `exclude` input maps only to repeated CLI `--exclude` arguments. It requires a prior checkout, needs no token or write permission, preserves CLI output and exit status, and ships under the same versioned ref as the CLI release. The committed action entry bundle is byte-identical to a fresh build from the tagged source.
 
 ### Release
 
 - REQ-REL-001 — `missionctl --version` equals `package.json` `version`; release packaging emits one archive containing only the root `missionctl` executable plus a SHA-256 sidecar; the executable runs on Node.js 20+ and bundles its YAML parser.
-- REQ-REL-002 — Pull-request and default-branch CI refuse live `LOOP.md` or `.mission/mission.yaml` artifacts anywhere outside `tests/fixtures`; campaign branches may commit them for resumability, but the merge tree must dissolve them first.
+- REQ-REL-002 — Pull-request and shared-branch CI refuse live `LOOP.md` or `.mission/mission.yaml` artifacts anywhere outside `tests/fixtures`; campaign branches may commit them for resumability, but the merge tree must dissolve them first.
 
 ## Invariants
 
@@ -184,7 +185,7 @@ Merge-guard traceability:
 - The GitHub Action delegates detection and advice to the bundled CLI; it never carries a second policy implementation.
 - Git is the archive: no in-repo archive, evidence ledger, campaign sidecar, or runtime cache.
 - A standing document is only ever appended to under its `## Decisions` heading.
-- Live `LOOP.md` and `.mission/mission.yaml` artifacts are branch-local and never survive in a default-branch tree; test fixtures are exempt.
+- Live `LOOP.md` and `.mission/mission.yaml` artifacts are branch-local and never survive in a shared-branch tree (any branch others build on, not only the default one); test fixtures are exempt.
 
 ## Non-goals
 
@@ -214,7 +215,7 @@ Merge-guard traceability:
 - [ ] A symlink occupying a loop or mission contract path fails visibly while an unrelated dangling symlink remains inert.
 - [ ] The Claude SessionStart hook emits bounded context, `{}` when absent, and a visible notice when invalid; only that hook is registered.
 - [ ] `npm run check`, the release archive, and `--version` agree on the package version.
-- [ ] Pull-request CI rejects live campaign or mission artifacts outside `tests/fixtures`, and the default-branch merge tree contains none.
+- [ ] Pull-request CI rejects live campaign or mission artifacts outside `tests/fixtures`, and the shared-branch merge tree contains none.
 
 ## Decisions
 
@@ -235,3 +236,4 @@ Merge-guard traceability:
 - 2026-08-29 — The body is the driver's bytes in every rewrite, repair included: only the frontmatter is ever normalized (LF, no BOM), so a CRLF body stays CRLF beside LF frontmatter. **provisional (driver)**
 - 2026-09-02 — `LOOP.md` and `.mission/mission.yaml` are branch-local control artifacts and never land in a default-branch tree; completed mission content dissolves into current standing law, while unfinished rubric work becomes tracker follow-ups only on explicit human direction. **ratified (human)**
 - 2026-09-02 — The reusable GitHub Action ships with the CLI release and delegates its detection, exit status, and remediation text to `missionctl merge check`; consumers receive the same advice as a local agent. **ratified (human)**
+- 2026-09-05 — Live `LOOP.md` and `.mission/mission.yaml` never merge into a shared branch (any branch others build on, not only the default one); they stay committed on the campaign branch for resumability and are removed before that branch merges. A loop close files each unfinished unit as a tracker issue. **ratified (human)**

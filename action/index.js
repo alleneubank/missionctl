@@ -7916,16 +7916,16 @@ function artifactIssue(path, kind) {
       code: "merge.branch-local-artifact",
       severity: "error",
       path,
-      message: `${shown} is branch-local campaign state and must not enter the default-branch tree`,
-      repair: `finish the campaign, use missionctl close to route durable decisions, and remove ${shown} before default-branch merge`
+      message: `${shown} is branch-local campaign state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)`,
+      repair: `finish the campaign, use missionctl close to route durable decisions and file each unfinished unit as a tracker issue, and remove ${shown} before merging into a shared branch`
     };
   }
   return {
     code: "merge.branch-local-artifact",
     severity: "error",
     path,
-    message: `${shown} is branch-local mission state and must not enter the default-branch tree`,
-    repair: `after the final campaign, preserve only current standing law; create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, then remove ${shown} before default-branch merge`
+    message: `${shown} is branch-local mission state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)`,
+    repair: `after the final campaign, preserve only current standing law; create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, then remove ${shown} before merging into a shared branch`
   };
 }
 function checkMergeTree(root2, additionalExcludes = []) {
@@ -8316,7 +8316,7 @@ function execute(options) {
 }
 function main(argv) {
   if (argv.length === 1 && (argv[0] === "--version" || argv[0] === "-V")) {
-    process.stdout.write(`${"0.1.0-rc.3"}
+    process.stdout.write(`${"0.1.0-rc.4"}
 `);
     return 0;
   }

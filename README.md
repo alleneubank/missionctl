@@ -9,11 +9,14 @@ then dissolve the file without losing anything it did not explicitly let go.
 A normal feature campaign needs only `LOOP.md`. A `.mission/mission.yaml` is
 optional and exists only when an outcome spans campaigns or repositories.
 Both are branch-local control artifacts: close and delete every campaign loop,
-then dissolve the mission before the tree merges to a default branch. Completed
-content survives only when it is current standing law in `SPEC.md`, `BRIEF.md`,
-or `README.md`; unfinished mission work becomes tracker follow-ups only when the
-user explicitly directs that. Test fixtures and inline documentation examples
-are not live campaign artifacts.
+then dissolve the mission before the tree merges into a shared branch — any
+branch others build on, not only the default one. Completed content survives
+only when it is current standing law in `SPEC.md`, `BRIEF.md`, or `README.md`;
+a loop close files each unfinished unit as a tracker issue, while unfinished
+mission work becomes tracker follow-ups only when the user explicitly directs
+that. Pushing the campaign branch itself for a handoff is fine; merging it with
+the artifacts still in the tree is not. Test fixtures and inline documentation
+examples are not live campaign artifacts.
 
 ## Install with mise
 
@@ -23,7 +26,7 @@ Node.js 20 or newer is the only runtime dependency.
 ```toml
 [tools]
 "github:alleneubank/missionctl" = {
-  version = "v0.1.0-rc.3",
+  version = "v0.1.0-rc.4",
   exe = "missionctl",
   asset_pattern = "missionctl-*.tar.gz"
 }
@@ -98,7 +101,7 @@ missionctl compact apply    --plan plan.json     # routes decisions into SPEC/BR
 work is never listed and always retained. `close` requires a terminal status,
 lists everything left, updates a linked mission rubric, and deletes `LOOP.md`.
 At the final campaign boundary, dissolve the mission too; it is coordination
-state, not a default-branch backlog or evidence archive. Git and the native
+state, not a shared-branch backlog or evidence archive. Git and the native
 issue, CI, review, and release systems retain history.
 
 ## GitHub Action
@@ -109,7 +112,7 @@ repository first, then add the action anywhere in an existing job:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alleneubank/missionctl@v0.1.0-rc.3
+- uses: alleneubank/missionctl@v0.1.0-rc.4
   with:
     exclude: |
       path/to/other/fixtures

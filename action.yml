@@ -1,5 +1,5 @@
 name: Missionctl merge check
-description: Refuse branch-local LOOP.md and mission.yaml control artifacts before default-branch merge.
+description: Refuse branch-local LOOP.md and mission.yaml control artifacts before a merge into any shared branch.
 author: Allen Eubank
 
 inputs:
