@@ -39,7 +39,7 @@ function track(root: string, relative: string, text = "fixture\n"): void {
   git(root, ["add", "--", relative]);
 }
 
-describe("default-branch merge guard", () => {
+describe("shared-branch merge guard", () => {
   it("passes a tracked tree with no live control artifacts", () => {
     const root = repository("clean");
 
@@ -73,23 +73,28 @@ describe("default-branch merge guard", () => {
           code: "merge.branch-local-artifact",
           severity: "error",
           path: "LOOP.md",
-          message: "LOOP.md is branch-local campaign state and must not enter the default-branch tree",
-          repair: "finish the campaign, use missionctl close to route durable decisions, and remove LOOP.md before default-branch merge",
+          message:
+            "LOOP.md is branch-local campaign state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)",
+          repair:
+            "finish the campaign, use missionctl close to route durable decisions and file each unfinished unit as a tracker issue, and remove LOOP.md before merging into a shared branch",
         },
         {
           code: "merge.branch-local-artifact",
           severity: "error",
           path: "nested/LOOP.md",
-          message: "nested/LOOP.md is branch-local campaign state and must not enter the default-branch tree",
-          repair: "finish the campaign, use missionctl close to route durable decisions, and remove nested/LOOP.md before default-branch merge",
+          message:
+            "nested/LOOP.md is branch-local campaign state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)",
+          repair:
+            "finish the campaign, use missionctl close to route durable decisions and file each unfinished unit as a tracker issue, and remove nested/LOOP.md before merging into a shared branch",
         },
         {
           code: "merge.branch-local-artifact",
           severity: "error",
           path: "services/api/.mission/mission.yaml",
-          message: "services/api/.mission/mission.yaml is branch-local mission state and must not enter the default-branch tree",
+          message:
+            "services/api/.mission/mission.yaml is branch-local mission state and must not enter the tree merged into a shared branch (any branch others build on, not only the default one)",
           repair:
-            "after the final campaign, preserve only current standing law; create tracker follow-ups for unfinished rubric items only when the user explicitly directs it, then remove services/api/.mission/mission.yaml before default-branch merge",
+            "after the final campaign, preserve only current standing law, file each unfinished rubric item as a tracker issue unless the user explicitly waives it, then remove services/api/.mission/mission.yaml before merging into a shared branch",
         },
       ],
     });
