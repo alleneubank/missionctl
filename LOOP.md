@@ -3,10 +3,10 @@ loop: 1
 id: remove-statusline-20260909
 objective: Retire missionctl statusline while preserving machine context, lifecycle operations, and SessionStart injection; prepare local commits and evidence for the rollout driver.
 status: active
-phase: TDD
-iteration: 2
+phase: DEV
+iteration: 3
 iteration_budget: 6
-updated_at: 2026-09-09T16:25:00Z
+updated_at: 2026-09-09T16:27:00Z
 targets:
   spec: [REQ-CTX-001, REQ-CTX-003, REQ-LOOP-005, REQ-LOOP-006, REQ-LIFE-001, REQ-LIFE-003, REQ-LEGACY-001, REQ-LEGACY-002, REQ-HOOK-001, REQ-HOOK-002, REQ-ACTION-001]
   brief: [Bounded projection, Degraded-state honesty, Lossless transitions, Portability, Adapter parity, Reviewability]
@@ -14,7 +14,7 @@ gates:
   - id: removal
     run: npm test -- tests/missionctl.test.ts -t 'removed command'
     green: Removed-command refusal and help absence are observed red at base and green after removal.
-    state: red
+    state: green
   - id: objective
     run: npm run check
     green: Typecheck, CLI and action build, and every vitest test pass on the candidate.
@@ -43,11 +43,11 @@ units:
   - id: U3
     title: Remove command and rendering, amend approved contracts, regenerate action, and pass focused checks.
     targets: [REQ-CTX-001, REQ-CTX-003, REQ-ACTION-001]
-    state: current
+    state: done
   - id: U4
     title: Pass the full harness and assembled baseline comparison, binding evidence to source and bundle digests.
     targets: [REQ-LOOP-005, REQ-LOOP-006, REQ-LIFE-001, REQ-HOOK-001, REQ-HOOK-002]
-    state: pending
+    state: current
   - id: U5
     title: Complete bounded fresh compatibility review and confirm any fixes with affected verifiers.
     targets: [REQ-CTX-001, REQ-CTX-003, REQ-LIFE-003]
@@ -83,4 +83,4 @@ Done requires all five gates green on the current artifact and all six units com
 
 ## State
 
-Iteration 2 observed all six removed-command checks fail for the intended reasons on the unchanged base executable (removal-red.log): help advertises the verb and dispatch exits zero instead of usage exit two. Shared tests retain context absence, caps, invalid-state issues, uncapped gate totals, and read-only coverage; legacy context failure coverage is explicit. The changed tests remain unstaged until the implementation passes, keeping the checkpoint commit valid. Iteration 3 removes runtime behavior and approved contracts.
+Iteration 3 removes the command list/help/dispatch, rendering function, boolean mode and degraded-state branches. REQ-CTX-002 is a retired tombstone; REQ-CTX-003 and shared tests retain context contracts. The generated action is refreshed by npm run build:action. Focused CLI, legacy, hook, plugin and action checks passed 78 tests in five files (removal-green.log); the six removal checks were observed red first (removal-red.log). No hook source, timeout, lifecycle implementation, fixture, or consumer changed. Iteration 4 runs the complete harness and baseline comparator before independent gates.

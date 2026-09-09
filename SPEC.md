@@ -124,8 +124,8 @@ allowed, proposed, disposition, reason }] }`.
 ### Projection
 
 - REQ-CTX-001 — `missionctl context` emits only: loop identity (`path`, `id`, `status`, `phase`, `iteration`, `iteration_budget`), `objective`, `current_unit`, `red_gates` (gates whose state is `red` or `unknown`) with the uncapped `red_gates_total`, `decisions`, `blockers`, `boundary`, `mission` (`id`, `targets`, `available`) when linked, and `warnings`. Lists are capped (8 decisions newest-last, 8 blockers, 8 red gates, 8 warnings) and every string is capped at 240 characters; `truncated: true` marks any cap hit. Strings that are capped include paths, ids, targets, boundary entries, and mission fields, so no field of the projection exceeds the cap.
-- REQ-CTX-002 — `missionctl statusline` renders one line from the same projection: `<status> <phase|-> · unit <id|none> · gates <red_gates_total> red · <iteration>/<budget>`.
-- REQ-CTX-003 — Invalid state is never served as stale success: `context` on an invalid or legacy loop exits `1` with the issues; `statusline` prints `loop invalid · <n> issues · missionctl check` (`n` counts every issue, warnings included) or `loop <legacy-class> · missionctl inspect` and exits `0`; both exit `1` with `loop.not-found` when no loop exists.
+- REQ-CTX-002 — Retired; statusline projection is no longer part of missionctl. This ID is not reused.
+- REQ-CTX-003 — Invalid state is never served as stale success: `context` on an invalid or legacy loop exits `1` with the issues; it exits `1` with `loop.not-found` when no loop exists.
 
 ### Lifecycle transitions
 
@@ -203,10 +203,11 @@ Merge-guard traceability:
 
 ## Acceptance criteria
 
-- [ ] A minimal `LOOP.md` alone validates, projects `context`, and renders `statusline`; no `.mission` directory or other file is created.
+- [ ] A minimal `LOOP.md` alone validates and projects `context`; no `.mission` directory or other file is created.
+- [ ] The removed `statusline` command is absent from help and refused as an unknown command with usage exit `2`, including with `--json`.
 - [ ] Every required field, enum, cross-field rule, and target resolution failure has an observed-red then passing test with a stable code and repair hint.
 - [ ] Tolerant reads (CRLF, BOM, coercion, unknown fields, short-form mission, `#`-truncated prose) pass with warnings; `repair` canonicalizes the mechanical ones.
-- [ ] A valid manual edit stays valid; an invalid manual edit fails `check`, `context`, and `statusline` visibly.
+- [ ] A valid manual edit stays valid; an invalid manual edit fails `check` and `context` visibly.
 - [ ] Legacy `mission_control: 1`, untyped, and `.claude/loop.md` loops classify; `adopt` previews and writes one file only when valid.
 - [ ] `compact` keeps unresolved units, routes decisions into `SPEC.md`/`BRIEF.md` Decisions, refuses a stale or incomplete plan, and rewrites atomically.
 - [ ] `close` refuses non-terminal loops and unresolved plans, routes durable content, updates a linked mission, and deletes `LOOP.md`.

@@ -18,7 +18,6 @@ import {
   projectMission,
   readPlan,
   renderContext,
-  renderStatusline,
   sha256,
   stringifyLoop,
   validatePlan,
@@ -32,7 +31,7 @@ import {
 
 declare const __MISSIONCTL_VERSION__: string;
 
-const COMMANDS = ["check", "context", "statusline", "repair", "inspect", "adopt", "compact", "close", "mission", "merge", "harness"] as const;
+const COMMANDS = ["check", "context", "repair", "inspect", "adopt", "compact", "close", "mission", "merge", "harness"] as const;
 type Command = (typeof COMMANDS)[number];
 const PLAN_STEPS = ["prepare", "validate", "apply"] as const;
 type PlanStep = (typeof PLAN_STEPS)[number];
@@ -61,7 +60,6 @@ function usage(): string {
     "usage: missionctl <command> [--root <path>] [--now <timestamp>] [--json]",
     "  check                        validate the LOOP.md at or above root",
     "  context                      bounded campaign projection for drivers and hooks",
-    "  statusline                   one-line projection",
     "  repair [--dry-run]           rewrite a tolerantly readable loop in canonical form",
     "  compact|close apply [--dry-run]  preview the writes a plan would make without touching any file",
     "  inspect                      classify a loop (typed, legacy, none) and preview legacy content",
@@ -181,22 +179,11 @@ function checkCommand(options: Options): CommandResult {
   return { exitCode: errors === 0 ? 0 : 1, value, text };
 }
 
-function contextCommand(options: Options, statusline: boolean): CommandResult {
+function contextCommand(options: Options): CommandResult {
   const evaluation = evaluateLoop(options.root);
-  // The status bar is a render, not a check: degraded state stays visible there instead of hiding the segment.
-  if (statusline && evaluation.kind === "legacy") {
-    const text = `loop ${evaluation.classification} · missionctl inspect\n`;
-    return { exitCode: 0, value: { ok: false, error: { code: evaluation.issue.code, message: text.trim() } }, text };
-  }
-  if (statusline && evaluation.kind === "loop" && !isValidLoop(evaluation)) {
-    // Every issue counts: a warning next to an error is still something check will show.
-    const issues = evaluation.issues.length;
-    const text = `loop invalid · ${issues} issue${issues === 1 ? "" : "s"} · missionctl check\n`;
-    return { exitCode: 0, value: { ok: false, error: { code: "loop.invalid", message: text.trim() } }, text };
-  }
   const loop = requireLoop(evaluation);
   const context = projectContext(loop, options.now);
-  return { exitCode: 0, value: context, text: statusline ? renderStatusline(context) : renderContext(context) };
+  return { exitCode: 0, value: context, text: renderContext(context) };
 }
 
 function repairCommand(options: Options): CommandResult {
@@ -340,9 +327,7 @@ function execute(options: Options): CommandResult {
     case "check":
       return checkCommand(options);
     case "context":
-      return contextCommand(options, false);
-    case "statusline":
-      return contextCommand(options, true);
+      return contextCommand(options);
     case "repair":
       return repairCommand(options);
     case "inspect":
