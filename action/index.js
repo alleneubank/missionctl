@@ -8298,7 +8298,7 @@ function execute(options) {
 }
 function main(argv) {
   if (argv.length === 1 && (argv[0] === "--version" || argv[0] === "-V")) {
-    process.stdout.write(`${"0.1.0-rc.4"}
+    process.stdout.write(`${"0.1.0-rc.5"}
 `);
     return 0;
   }

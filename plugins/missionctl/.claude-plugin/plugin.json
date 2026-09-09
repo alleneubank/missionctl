@@ -1,6 +1,6 @@
 {
   "name": "missionctl",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "Session-start campaign context from LOOP.md, backed by the separately installed missionctl executable.",
   "author": {
     "name": "Allen Eubank",

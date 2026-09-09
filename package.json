@@ -1,6 +1,6 @@
 {
   "name": "missionctl",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "Typed mission and campaign contract evaluator for agent fleets.",
   "license": "MIT",
   "type": "module",

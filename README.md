@@ -26,7 +26,7 @@ Node.js 20 or newer is the only runtime dependency.
 ```toml
 [tools]
 "github:alleneubank/missionctl" = {
-  version = "v0.1.0-rc.4",
+  version = "v0.1.0-rc.5",
   exe = "missionctl",
   asset_pattern = "missionctl-*.tar.gz"
 }
