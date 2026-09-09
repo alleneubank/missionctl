@@ -2,11 +2,11 @@
 loop: 1
 id: remove-statusline-20260909
 objective: Retire missionctl statusline while preserving machine context, lifecycle operations, and SessionStart injection; prepare local commits and evidence for the rollout driver.
-status: active
-phase: E2E
-iteration: 5
+status: done
+phase: BOUNDARY
+iteration: 6
 iteration_budget: 6
-updated_at: 2026-09-09T16:33:19Z
+updated_at: 2026-09-09T16:44:36Z
 targets:
   spec: [REQ-CTX-001, REQ-CTX-003, REQ-LOOP-005, REQ-LOOP-006, REQ-LIFE-001, REQ-LIFE-003, REQ-LEGACY-001, REQ-LEGACY-002, REQ-HOOK-001, REQ-HOOK-002, REQ-ACTION-001]
   brief: [Bounded projection, Degraded-state honesty, Lossless transitions, Portability, Adapter parity, Reviewability]
@@ -30,7 +30,7 @@ gates:
   - id: bugbash
     run: Fresh native participant executes the task artifact CLI-bugbash charter against dist/missionctl.
     green: All eight public CLI and SessionStart operator tasks complete without major-or-higher findings on the candidate artifact.
-    state: unknown
+    state: green
 units:
   - id: U1
     title: Declare QA design, build the base, and capture preservation baselines.
@@ -55,7 +55,7 @@ units:
   - id: U6
     title: Complete fresh task-based CLI bug bash, bind final evidence, and close or report an honest terminal handoff.
     targets: [REQ-LEGACY-001, REQ-LEGACY-002, REQ-LIFE-001, REQ-LIFE-003, REQ-HOOK-001]
-    state: current
+    state: done
 decisions: []
 blockers: []
 boundary: [publish, push, pull-request, merge, tag, install, release, sibling-repository-edits, operator-plugin-or-Sox-mutation, cross-repository-rollout]
@@ -83,4 +83,4 @@ Done requires all five gates green on the current artifact and all six units com
 
 ## State
 
-Iteration 5 completed the fresh native compatibility specialist gate: green, no findings, one round (compatibility-review.md). The reviewer independently recorded matching source/CLI/action identities at 86fb252baef925fb9b9fd1c6e723a8f086084d20 (identity-compatibility-review.json), inspected the retained 159-test and 123-comparison execution evidence and full scoped diff, and required no fix-up. The remaining gate is the fresh eight-task CLI/SessionStart bug bash; the external renderer and installed plugin remain driver boundary work. Product files are unchanged since objective gates; iteration 6 will bind final evidence and close only if that terminal task gate is green.
+Iteration 6 completed the fresh native CLI/SessionStart operator gate: green, 8/8 tasks, 103 invocations, 45/45 assessments, no findings or unexpected file effects (CLI-bugbash.md and cli-bugbash-native evidence). The executor independently matched source/CLI/action hashes before and after at 2413751d31d2a69de69a39bd9585cfdbd9ba8dd4. All five gates are green on the same product artifact; every unit is complete within the six-iteration budget. evidence.md records the red/green checks, 159-test full harness, 123 exact baseline comparisons, specialist verdict and task gate. This terminal loop is validated and committed before missionctl close; its execution notes have no additional durable law to route. driver-next-action.md carries the external renderer-first installation and integration boundary, which remains unexecuted here.
