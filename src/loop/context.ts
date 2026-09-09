@@ -9,7 +9,7 @@ export interface ContextProjection {
   objective: string;
   current_unit: { id: string; title: string; targets: string[] } | null;
   red_gates: Gate[];
-  /** Uncapped count, so a status bar never under-reports red gates when `red_gates` is clipped. */
+  /** Uncapped count, so consumers can see the total when `red_gates` is clipped. */
   red_gates_total: number;
   decisions: Array<{ date: string; call: string; status: string }>;
   blockers: Array<{ summary: string; proposed?: string }>;
@@ -47,7 +47,7 @@ export function projectContext(loop: ValidLoop, now: Date): ContextProjection {
     warnings.push(`loop.expected-signal-overdue expected_signal_by: ${document.expected_signal_by} has passed`);
   }
   const clipAll = (items: readonly string[]): string[] => items.map((item) => clip(item, state));
-  // Every string crosses clip(): the projection is injected into prompts and status bars, so no field is trusted to be short.
+  // Every string crosses clip(): the projection is injected into prompts, so no field is trusted to be short.
   return {
     loop: {
       path: clip(loop.path, state),
@@ -89,8 +89,4 @@ export function renderContext(context: ContextProjection): string {
     ...(context.truncated ? ["TRUNCATED yes"] : []),
   ];
   return `${lines.join("\n")}\n`;
-}
-
-export function renderStatusline(context: ContextProjection): string {
-  return `${context.loop.status} ${context.loop.phase ?? "-"} · unit ${context.current_unit?.id ?? "none"} · gates ${context.red_gates_total} red · ${context.loop.iteration}/${context.loop.iteration_budget}\n`;
 }

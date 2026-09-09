@@ -11,7 +11,7 @@
       "name": "missionctl",
       "description": "Injects the campaign LOOP.md projection at session start.",
       "source": "./plugins/missionctl",
-      "version": "0.1.0-rc.4",
+      "version": "0.1.0-rc.5",
       "category": "workflow",
       "author": {
         "name": "Allen Eubank",

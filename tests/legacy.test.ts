@@ -99,15 +99,7 @@ describe("inspect", () => {
     });
   });
 
-  it("keeps legacy loops visible in the statusline", () => {
-    expect(run(["statusline", "--root", resolve(FIXTURES, "legacy-untyped")])).toMatchObject({
-      status: 0,
-      stdout: "loop legacy-untyped · missionctl inspect\n",
-      stderr: "",
-    });
-  });
-
-  it("makes check fail visibly on legacy loops with an adoption path", () => {
+  it("makes check and context fail visibly on legacy loops with an adoption path", () => {
     for (const [name, code] of [
       ["legacy-untyped", "legacy.untyped"],
       ["legacy-mission-control", "legacy.mission-control"],
@@ -126,6 +118,13 @@ describe("inspect", () => {
             repair: expect.stringContaining("missionctl adopt"),
           },
         ],
+      });
+      const context = run(["context", "--root", resolve(FIXTURES, name), "--json"]);
+      expect(context.status).toBe(1);
+      expect(json(context)).toEqual({
+        ok: false,
+        error: { code, message: expect.stringContaining(name) },
+        issues: [{ code, severity: "error", path: "", message: expect.stringContaining(name), repair: expect.stringContaining("missionctl adopt") }],
       });
     }
   });

@@ -22,9 +22,9 @@ Missionctl is shippable when a driver with nothing but the repository can read o
 
 - Grammar fidelity: every field, enum, cross-field rule, and target resolution in `SPEC.md` has a fixture that passes and a mutation that fails with its stable code; the body survives every rewrite byte-for-byte.
 - Tolerance and strictness: CRLF, BOM, coercible integers, unknown fields, and short forms read with warnings only; every write is canonical and validated before it lands.
-- Bounded projection: `context` output for the largest fixture stays under the declared caps and marks truncation; `statusline` is one line.
+- Bounded projection: `context` output for the largest fixture stays under the declared caps and marks truncation.
 - Lossless transitions: a `compact`/`close` plan with an unset, disallowed, or reason-less disposition is refused; a stale source is refused; an interrupted apply leaves the previous file intact; routed decisions appear in the target document's Decisions section with the rest of that document unchanged.
-- Degraded-state honesty: invalid, legacy, and absent state produce distinct, stable codes and exit statuses in `check`, `context`, `statusline`, and the hook; no command prints an empty success for an invalid loop.
+- Degraded-state honesty: invalid, legacy, and absent state produce distinct, stable codes and exit statuses in `check`, `context`, and the hook; no command prints an empty success for an invalid loop.
 - Portability: the release archive holds one Node 20+ executable, the plugin manifests match the package version and register only the SessionStart hook, and `--version` matches `package.json`.
 - Merge-tree fidelity: one check over the tracked Git tree finds every live loop or mission contract, including symbolic links, without treating generated files, untracked work, or declared fixtures as shipped state; every refusal names the correct dissolution path.
 - Adapter parity: the reusable GitHub Action calls the exported CLI entry under GitHub's declared Node 24 runtime and preserves its findings, advice, and exit status; generated-bundle and behavioral-parity floors prove the action does not ship stale or divergent policy.

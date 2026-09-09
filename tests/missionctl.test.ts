@@ -56,6 +56,33 @@ const STANDALONE_CONTEXT_TEXT =
   "BLOCKERS none\n" +
   "BOUNDARY publish, merge-tracked-ref\n";
 
+describe("removed command", () => {
+  it.each([{ args: [] }, { args: ["--help"] }, { args: ["-h"] }, { args: ["context", "--help"] }])("omits the retired verb from help for $args", ({ args }) => {
+    const result = run(args);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("usage: missionctl");
+    expect(result.stdout).toContain("  context ");
+    expect(result.stdout).not.toContain("statusline");
+  });
+
+  it.each([false, true])("refuses the retired verb before reading loop state (JSON=%s)", (structured) => {
+    const invalid = fixtureCopy("standalone");
+    replaceInFile(resolve(invalid, "LOOP.md"), "status: active", "status: sprinting");
+    for (const root of [STANDALONE, invalid, tempRoot("removed-command"), resolve(FIXTURES, "legacy-untyped"), resolve(FIXTURES, "legacy-mission-control")]) {
+      const result = run(["statusline", "--root", root, ...(structured ? ["--json"] : [])]);
+      expect(result.status).toBe(2);
+      expect(result.stderr).toBe("");
+      if (structured) {
+        expect(json(result)).toEqual({ ok: false, error: { code: "usage", message: expect.stringMatching(/^unknown command statusline\nusage: missionctl/) } });
+      } else {
+        expect(result.stdout).toMatch(/^unknown command statusline\nusage: missionctl/);
+      }
+      expect(result.stdout).not.toContain("  statusline ");
+    }
+  });
+});
+
 describe("standalone loop contract", () => {
   it("validates a standalone LOOP.md with nothing else present", () => {
     const result = run(["check", "--root", STANDALONE, "--now", NOW, "--json"]);
@@ -88,20 +115,9 @@ describe("standalone loop contract", () => {
     expect(text).toMatchObject({ status: 0, stdout: STANDALONE_CONTEXT_TEXT, stderr: "" });
   });
 
-  it("renders the one-line statusline", () => {
-    expect(run(["statusline", "--root", STANDALONE, "--now", NOW])).toMatchObject({
-      status: 0,
-      stdout: "active TDD · unit U2 · gates 1 red · 3/8\n",
-      stderr: "",
-    });
-    expect(run(["statusline", "--root", resolve(FIXTURES, "sox-visual-pilot"), "--now", NOW]).stdout).toBe(
-      "done BOUNDARY · unit none · gates 0 red · 3/6\n",
-    );
-  });
-
   it("creates no directory or file as a side effect of read-only commands", () => {
     const root = fixtureCopy("standalone");
-    for (const command of [["check"], ["context"], ["statusline"], ["inspect"], ["compact", "prepare"]]) {
+    for (const command of [["check"], ["context"], ["inspect"], ["compact", "prepare"]]) {
       expect(run([...command, "--root", root, "--now", NOW, "--json"]).status).toBe(0);
     }
 
@@ -114,11 +130,9 @@ describe("standalone loop contract", () => {
 
     expect(json(run(["check", "--root", empty, "--json"]))).toEqual({ ok: true, loop: null, issues: [] });
     expect(run(["check", "--root", empty]).stdout).toBe("missionctl check: no LOOP.md at or above root\n");
-    for (const command of ["context", "statusline"]) {
-      const result = run([command, "--root", empty, "--json"]);
-      expect(result.status).toBe(1);
-      expect(json(result)).toEqual({ ok: false, error: { code: "loop.not-found", message: expect.any(String) } });
-    }
+    const result = run(["context", "--root", empty, "--json"]);
+    expect(result.status).toBe(1);
+    expect(json(result)).toEqual({ ok: false, error: { code: "loop.not-found", message: expect.any(String) } });
   });
 });
 
@@ -139,7 +153,6 @@ describe("bounded projection", () => {
     expect(context.warnings).toHaveLength(8);
     expect(context.truncated).toBe(true);
     expect(run(["context", "--root", root, "--now", NOW]).stdout.length).toBeLessThan(4_096);
-    expect(run(["statusline", "--root", root, "--now", NOW]).stdout).toBe("active TDD · unit U2 · gates 12 red · 3/8\n");
   });
 });
 
@@ -159,7 +172,7 @@ describe("manual edits", () => {
     ]);
   });
 
-  it("fails an invalid direct edit visibly in check, context, and statusline with a repair path", () => {
+  it("fails an invalid direct edit visibly in check and context with a repair path", () => {
     const root = fixtureCopy("standalone");
     replaceInFile(resolve(root, "LOOP.md"), "status: active", "status: sprinting");
 
@@ -183,12 +196,6 @@ describe("manual edits", () => {
     const context = run(["context", "--root", root, "--now", NOW, "--json"]);
     expect(context.status).toBe(1);
     expect(json(context)).toEqual({ ok: false, error: { code: "loop.invalid", message: expect.stringContaining("1 error") }, issues: output.issues });
-
-    expect(run(["statusline", "--root", root, "--now", NOW])).toMatchObject({
-      status: 0,
-      stdout: "loop invalid · 1 issue · missionctl check\n",
-      stderr: "",
-    });
   });
 
   it("resolves targets against the nearest SPEC.md and BRIEF.md", () => {
@@ -653,7 +660,7 @@ describe("dogfood findings", () => {
 });
 
 describe("review round 4 findings", () => {
-  it("caps every projected string and keeps the statusline to one line", () => {
+  it("caps projected boundary and unit strings and marks truncation", () => {
     const root = fixtureCopy("standalone");
     const loop = resolve(root, "LOOP.md");
     const long = "x".repeat(20_000);
@@ -664,12 +671,6 @@ describe("review round 4 findings", () => {
     expect(context.boundary[0].length).toBe(240);
     expect(context.current_unit.id.length).toBe(240);
     expect(context.truncated).toBe(true);
-
-    const statusline = run(["statusline", "--root", root, "--now", NOW]);
-    expect(statusline.status).toBe(0);
-    expect(statusline.stdout.endsWith("\n")).toBe(true);
-    expect(statusline.stdout.slice(0, -1)).not.toContain("\n");
-    expect(statusline.stdout.length).toBeLessThan(300);
   });
 
   it("keeps unknown nested fields through repair", () => {
@@ -786,11 +787,20 @@ describe("review round 6 findings", () => {
 });
 
 describe("review round 7 findings", () => {
-  it("counts warnings alongside errors in the invalid-loop statusline", () => {
+  it("preserves warnings alongside errors when context refuses an invalid loop", () => {
     const root = fixtureCopy("standalone");
     replaceInFile(resolve(root, "LOOP.md"), "status: active", "status: sprinting\nowner: allen");
 
     expect(json<CheckOutput>(run(["check", "--root", root, "--now", NOW, "--json"])).issues.map((issue) => issue.severity)).toEqual(["error", "warning"]);
-    expect(run(["statusline", "--root", root, "--now", NOW]).stdout).toBe("loop invalid · 2 issues · missionctl check\n");
+    const context = run(["context", "--root", root, "--now", NOW, "--json"]);
+    expect(context.status).toBe(1);
+    expect(json(context)).toEqual({
+      ok: false,
+      error: { code: "loop.invalid", message: `${resolve(root, "LOOP.md")} has 1 error` },
+      issues: [
+        expect.objectContaining({ code: "loop.invalid-enum", severity: "error", path: "status" }),
+        expect.objectContaining({ code: "loop.unknown-field", severity: "warning", path: "owner" }),
+      ],
+    });
   });
 });

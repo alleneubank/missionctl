@@ -72,10 +72,6 @@ function renderContext(context) {
   return `${lines.join("\n")}
 `;
 }
-function renderStatusline(context) {
-  return `${context.loop.status} ${context.loop.phase ?? "-"} \xB7 unit ${context.current_unit?.id ?? "none"} \xB7 gates ${context.red_gates_total} red \xB7 ${context.loop.iteration}/${context.loop.iteration_budget}
-`;
-}
 
 // node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = /* @__PURE__ */ Symbol.for("yaml.alias");
@@ -8005,14 +8001,13 @@ function runClaudeHarness(event, now) {
 }
 
 // src/missionctl.ts
-var COMMANDS = ["check", "context", "statusline", "repair", "inspect", "adopt", "compact", "close", "mission", "merge", "harness"];
+var COMMANDS = ["check", "context", "repair", "inspect", "adopt", "compact", "close", "mission", "merge", "harness"];
 var PLAN_STEPS = ["prepare", "validate", "apply"];
 function usage() {
   return [
     "usage: missionctl <command> [--root <path>] [--now <timestamp>] [--json]",
     "  check                        validate the LOOP.md at or above root",
     "  context                      bounded campaign projection for drivers and hooks",
-    "  statusline                   one-line projection",
     "  repair [--dry-run]           rewrite a tolerantly readable loop in canonical form",
     "  compact|close apply [--dry-run]  preview the writes a plan would make without touching any file",
     "  inspect                      classify a loop (typed, legacy, none) and preview legacy content",
@@ -8129,22 +8124,11 @@ function checkCommand(options) {
 ${summary}`;
   return { exitCode: errors === 0 ? 0 : 1, value, text };
 }
-function contextCommand(options, statusline) {
+function contextCommand(options) {
   const evaluation = evaluateLoop(options.root);
-  if (statusline && evaluation.kind === "legacy") {
-    const text = `loop ${evaluation.classification} \xB7 missionctl inspect
-`;
-    return { exitCode: 0, value: { ok: false, error: { code: evaluation.issue.code, message: text.trim() } }, text };
-  }
-  if (statusline && evaluation.kind === "loop" && !isValidLoop(evaluation)) {
-    const issues = evaluation.issues.length;
-    const text = `loop invalid \xB7 ${issues} issue${issues === 1 ? "" : "s"} \xB7 missionctl check
-`;
-    return { exitCode: 0, value: { ok: false, error: { code: "loop.invalid", message: text.trim() } }, text };
-  }
   const loop = requireLoop(evaluation);
   const context = projectContext(loop, options.now);
-  return { exitCode: 0, value: context, text: statusline ? renderStatusline(context) : renderContext(context) };
+  return { exitCode: 0, value: context, text: renderContext(context) };
 }
 function repairCommand(options) {
   const evaluation = evaluateLoop(options.root);
@@ -8287,9 +8271,7 @@ function execute(options) {
     case "check":
       return checkCommand(options);
     case "context":
-      return contextCommand(options, false);
-    case "statusline":
-      return contextCommand(options, true);
+      return contextCommand(options);
     case "repair":
       return repairCommand(options);
     case "inspect":
@@ -8316,7 +8298,7 @@ function execute(options) {
 }
 function main(argv) {
   if (argv.length === 1 && (argv[0] === "--version" || argv[0] === "-V")) {
-    process.stdout.write(`${"0.1.0-rc.4"}
+    process.stdout.write(`${"0.1.0-rc.5"}
 `);
     return 0;
   }

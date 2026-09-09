@@ -26,7 +26,7 @@ Node.js 20 or newer is the only runtime dependency.
 ```toml
 [tools]
 "github:alleneubank/missionctl" = {
-  version = "v0.1.0-rc.4",
+  version = "v0.1.0-rc.5",
   exe = "missionctl",
   asset_pattern = "missionctl-*.tar.gz"
 }
@@ -72,7 +72,6 @@ invalid loop as if it were valid.
 ```bash
 missionctl check       [--root DIR]        # validate; exit 1 on errors, warnings never fail
 missionctl context     [--root DIR] [--json]  # bounded projection: objective, unit, red gates, decisions, blockers, boundary
-missionctl statusline  [--root DIR]        # one line for status bars
 missionctl repair      [--dry-run]         # canonical rewrite of a tolerantly readable loop (refuses while a # may have truncated a value)
 missionctl inspect                         # classify: loop | legacy-untyped | legacy-mission-control | none
 missionctl adopt       [--write]           # draft a typed LOOP.md from a legacy loop; write only when valid
