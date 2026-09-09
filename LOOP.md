@@ -3,10 +3,10 @@ loop: 1
 id: remove-statusline-20260909
 objective: Retire missionctl statusline while preserving machine context, lifecycle operations, and SessionStart injection; prepare local commits and evidence for the rollout driver.
 status: active
-phase: DEV
-iteration: 3
+phase: E2E
+iteration: 4
 iteration_budget: 6
-updated_at: 2026-09-09T16:27:00Z
+updated_at: 2026-09-09T16:29:05Z
 targets:
   spec: [REQ-CTX-001, REQ-CTX-003, REQ-LOOP-005, REQ-LOOP-006, REQ-LIFE-001, REQ-LIFE-003, REQ-LEGACY-001, REQ-LEGACY-002, REQ-HOOK-001, REQ-HOOK-002, REQ-ACTION-001]
   brief: [Bounded projection, Degraded-state honesty, Lossless transitions, Portability, Adapter parity, Reviewability]
@@ -18,11 +18,11 @@ gates:
   - id: objective
     run: npm run check
     green: Typecheck, CLI and action build, and every vitest test pass on the candidate.
-    state: unknown
+    state: green
   - id: compatibility
     run: node /Users/allen/.handoffs/statusline-assignments-20260909/missionctl/compatibility.mjs
     green: Baseline and candidate context, check, inspect, lifecycle previews, and SessionStart outputs and read-only file snapshots match on isolated fixtures.
-    state: unknown
+    state: green
   - id: specialist
     run: Fresh native specialist executes the task artifact compatibility-review charter.
     green: One compatibility review plus at most one finding-confirmation round reports no major-or-higher contract regression.
@@ -47,11 +47,11 @@ units:
   - id: U4
     title: Pass the full harness and assembled baseline comparison, binding evidence to source and bundle digests.
     targets: [REQ-LOOP-005, REQ-LOOP-006, REQ-LIFE-001, REQ-HOOK-001, REQ-HOOK-002]
-    state: current
+    state: done
   - id: U5
     title: Complete bounded fresh compatibility review and confirm any fixes with affected verifiers.
     targets: [REQ-CTX-001, REQ-CTX-003, REQ-LIFE-003]
-    state: pending
+    state: current
   - id: U6
     title: Complete fresh task-based CLI bug bash, bind final evidence, and close or report an honest terminal handoff.
     targets: [REQ-LEGACY-001, REQ-LEGACY-002, REQ-LIFE-001, REQ-LIFE-003, REQ-HOOK-001]
@@ -83,4 +83,4 @@ Done requires all five gates green on the current artifact and all six units com
 
 ## State
 
-Iteration 3 removes the command list/help/dispatch, rendering function, boolean mode and degraded-state branches. REQ-CTX-002 is a retired tombstone; REQ-CTX-003 and shared tests retain context contracts. The generated action is refreshed by npm run build:action. Focused CLI, legacy, hook, plugin and action checks passed 78 tests in five files (removal-green.log); the six removal checks were observed red first (removal-red.log). No hook source, timeout, lifecycle implementation, fixture, or consumer changed. Iteration 4 runs the complete harness and baseline comparator before independent gates.
+Iteration 4 passed npm run check (159 tests, 10 files; candidate-check.log) and all 123 byte-exact baseline comparisons with unchanged fixture/cache snapshots (compatibility-candidate.json). identity-objective.json binds source commit 63498fd417898a4b508038d0c74180e805113512 and product source/CLI/action digests. The removal checks were observed red at the base (removal-red.log) and green (removal-green.log). Fresh specialist and CLI-bugbash charters are prepared in the task artifact directory. Independent gates have not yet run. Only LOOP.md changes after this evidence; product digest equality will be checked across later campaign commits.
